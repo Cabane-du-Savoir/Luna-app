@@ -1,0 +1,360 @@
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  SafeAreaView,
+} from 'react-native';
+import { Colors, Typography, Spacing } from '../../constants/tokens';
+
+interface Question {
+  id: string;
+  tag: string;
+  content: string;
+  createdAt: string;
+  author: string;
+  answered: boolean;
+  likes: number;
+}
+
+const QuestionsScreen: React.FC = () => {
+  const [selectedTab, setSelectedTab] = useState<'recent' | 'unanswered'>('recent');
+
+  const questions: Question[] = [
+    {
+      id: '1',
+      tag: 'Toilette',
+      content: 'Est-ce normal d\'avoir des variations dans la durée de mes règles ?',
+      createdAt: 'il y a 2h',
+      author: 'Marie D.',
+      answered: true,
+      likes: 12,
+    },
+    {
+      id: '2',
+      tag: 'Symptômes',
+      content: 'Comment gérer la douleur pendant les règles ?',
+      createdAt: 'il y a 5h',
+      author: 'Sophie M.',
+      answered: false,
+      likes: 3,
+    },
+    {
+      id: '3',
+      tag: 'Cycle',
+      content: 'Pourquoi mon cycle change-t-il de longueur ?',
+      createdAt: 'il y a 1j',
+      author: 'Emma L.',
+      answered: true,
+      likes: 8,
+    },
+  ];
+
+  const filteredQuestions = selectedTab === 'recent' 
+    ? questions 
+    : questions.filter(q => !q.answered);
+
+  return (
+    <SafeAreaView style={styles.safeArea}>
+      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={styles.title}>Questions</Text>
+          <Text style={styles.subtitle}>Anonyme. Des réponses claires, sans diagnostic.</Text>
+        </View>
+
+        <View style={styles.transparencyCard}>
+          <Text style={styles.transparencyTitle}>Qui répond ?</Text>
+          <Text style={styles.transparencyText}>
+            Luna, notre assistante IA, répond aux questions d'hygiène et de cycle. Les questions sur une douleur ou un symptôme sont transmises à une professionnelle de santé.
+          </Text>
+          <Text style={styles.transparencyNote}>Aucune réponse ne remplace une consultation.</Text>
+        </View>
+
+        {/* Ask Question Card */}
+        <TouchableOpacity style={styles.askCard}>
+          <Text style={styles.askCardIcon}>+</Text>
+          <View style={styles.askCardContent}>
+            <Text style={styles.askCardTitle}>Poser ma question</Text>
+            <Text style={styles.askCardSubtitle}>Pose une question, reçois une réponse</Text>
+          </View>
+        </TouchableOpacity>
+
+        {/* Tabs */}
+        <View style={styles.tabsContainer}>
+          <TouchableOpacity
+            style={[styles.tab, selectedTab === 'recent' && styles.tabActive]}
+            onPress={() => setSelectedTab('recent')}
+          >
+            <Text style={[styles.tabText, selectedTab === 'recent' && styles.tabTextActive]}>
+              Récentes
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.tab, selectedTab === 'unanswered' && styles.tabActive]}
+            onPress={() => setSelectedTab('unanswered')}
+          >
+            <Text style={[styles.tabText, selectedTab === 'unanswered' && styles.tabTextActive]}>
+              Sans réponse
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Questions List */}
+        <View style={styles.questionsContainer}>
+          {filteredQuestions.map(question => (
+            <View key={question.id} style={styles.questionCard}>
+              {/* Tag and Time */}
+              <View style={styles.questionHeader}>
+                <Text style={styles.questionTag}>{question.tag}</Text>
+                <Text style={styles.questionTime}>{question.createdAt}</Text>
+              </View>
+
+              {/* Question Text */}
+              <Text style={styles.questionText}>{question.content}</Text>
+
+              {/* Answer (if exists) */}
+              {question.answered && (
+                <View style={styles.answerContainer}>
+                  <View style={styles.answerLine} />
+                  <View style={styles.answerContent}>
+                    <Text style={styles.answerText}>
+                      La durée des règles peut varier selon plusieurs facteurs : stress, changement de régime alimentaire, exercice physique, ou des variations hormonales normales.
+                    </Text>
+                    <Text style={styles.answerAttribution}>
+                      Réponse vérifiée · sage-femme
+                    </Text>
+                  </View>
+                </View>
+              )}
+
+              {!question.answered && (
+                <Text style={styles.unansweredText}>
+                  2 réponses en attente
+                </Text>
+              )}
+
+              {/* Footer */}
+              <View style={styles.questionFooter}>
+                <TouchableOpacity style={styles.likeButton}>
+                  <Text style={styles.likeButtonText}>♥ {question.likes}</Text>
+                </TouchableOpacity>
+                <Text style={styles.replyCount}>💬 Répondre</Text>
+              </View>
+            </View>
+          ))}
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
+};
+
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: Colors.Cream,
+  },
+  container: {
+    flex: 1,
+    backgroundColor: Colors.Cream,
+  },
+  header: {
+    paddingHorizontal: Spacing.screenHorizontalPadding,
+    paddingVertical: 20,
+  },
+  title: {
+    fontSize: Typography.sizes.screenTitle,
+    fontFamily: Typography.families.heading,
+    color: Colors.Text,
+    marginBottom: 4,
+  },
+  subtitle: {
+    fontSize: Typography.sizes.secondary,
+    fontFamily: Typography.families.body,
+    color: Colors.Text,
+    opacity: 0.65,
+  },
+  askCard: {
+    marginHorizontal: Spacing.screenHorizontalPadding,
+    marginBottom: Spacing.verticalGapRegular,
+    borderWidth: 2,
+    borderStyle: 'dashed',
+    borderColor: Colors.Plum,
+    borderRadius: 21,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  askCardIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.Plum,
+    color: Colors.TextOnPlum,
+    fontSize: 24,
+    textAlign: 'center',
+    lineHeight: 40,
+    marginRight: 12,
+  },
+  askCardContent: {
+    flex: 1,
+  },
+  askCardTitle: {
+    fontSize: Typography.sizes.cardTitle,
+    fontFamily: Typography.families.heading,
+    color: Colors.Text,
+    marginBottom: 2,
+  },
+  askCardSubtitle: {
+    fontSize: Typography.sizes.caption,
+    fontFamily: Typography.families.body,
+    color: Colors.Text,
+    opacity: 0.65,
+  },
+  transparencyCard: {
+    marginHorizontal: Spacing.screenHorizontalPadding,
+    marginBottom: Spacing.verticalGapRegular,
+    backgroundColor: Colors.BlushLight,
+    borderRadius: 20,
+    padding: 16,
+  },
+  transparencyTitle: {
+    fontSize: Typography.sizes.cardTitle,
+    fontFamily: Typography.families.heading,
+    color: Colors.Text,
+    marginBottom: 6,
+  },
+  transparencyText: {
+    fontSize: Typography.sizes.secondary,
+    fontFamily: Typography.families.body,
+    color: Colors.Text,
+    lineHeight: 19,
+  },
+  transparencyNote: {
+    fontSize: Typography.sizes.caption,
+    fontFamily: Typography.families.body,
+    color: Colors.Alert,
+    marginTop: 8,
+  },
+  tabsContainer: {
+    flexDirection: 'row',
+    paddingHorizontal: Spacing.screenHorizontalPadding,
+    marginBottom: Spacing.verticalGapRegular,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.Border,
+  },
+  tab: {
+    paddingVertical: 12,
+    marginRight: 20,
+  },
+  tabActive: {
+    borderBottomWidth: 2,
+    borderBottomColor: Colors.Plum,
+  },
+  tabText: {
+    fontSize: Typography.sizes.body,
+    fontFamily: Typography.families.body,
+    color: Colors.Text,
+    opacity: 0.65,
+  },
+  tabTextActive: {
+    color: Colors.Plum,
+    opacity: 1,
+    fontWeight: '500',
+  },
+  questionsContainer: {
+    paddingHorizontal: Spacing.screenHorizontalPadding,
+    marginBottom: 20,
+  },
+  questionCard: {
+    backgroundColor: Colors.CreamCard,
+    borderWidth: 1,
+    borderColor: Colors.Border,
+    borderRadius: 21,
+    padding: 16,
+    marginBottom: 12,
+  },
+  questionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  questionTag: {
+    fontSize: 10,
+    fontFamily: Typography.families.body,
+    color: Colors.Plum,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    fontWeight: '500',
+  },
+  questionTime: {
+    fontSize: 10,
+    fontFamily: Typography.families.body,
+    color: Colors.Text,
+    opacity: 0.65,
+  },
+  questionText: {
+    fontSize: Typography.sizes.questionText,
+    fontFamily: Typography.families.heading,
+    color: Colors.Text,
+    marginBottom: 12,
+    lineHeight: 24,
+  },
+  answerContainer: {
+    flexDirection: 'row',
+    marginTop: 12,
+    marginBottom: 12,
+  },
+  answerLine: {
+    width: 2,
+    backgroundColor: Colors.BorderWarm,
+    marginRight: 12,
+  },
+  answerContent: {
+    flex: 1,
+  },
+  answerText: {
+    fontSize: Typography.sizes.body,
+    fontFamily: Typography.families.body,
+    color: Colors.Text,
+    marginBottom: 8,
+    lineHeight: 20,
+  },
+  answerAttribution: {
+    fontSize: Typography.sizes.caption,
+    fontFamily: Typography.families.body,
+    color: Colors.Text,
+    opacity: 0.65,
+  },
+  unansweredText: {
+    fontSize: Typography.sizes.secondary,
+    fontFamily: Typography.families.body,
+    color: Colors.Alert,
+    marginBottom: 12,
+  },
+  questionFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  likeButton: {
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+  },
+  likeButtonText: {
+    fontSize: Typography.sizes.caption,
+    fontFamily: Typography.families.body,
+    color: Colors.Text,
+    opacity: 0.65,
+  },
+  replyCount: {
+    fontSize: Typography.sizes.caption,
+    fontFamily: Typography.families.body,
+    color: Colors.Text,
+    opacity: 0.65,
+  },
+});
+
+export default QuestionsScreen;
