@@ -5,7 +5,6 @@
     "lib": [
       "ES2020"
     ],
-    "moduleResolution": "node",
     "resolveJsonModule": true,
     "allowJs": true,
     "strict": true,
@@ -15,31 +14,7 @@
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    "outDir": "./dist",
-    "baseUrl": ".",
-    "paths": {
-      "@/*": [
-        "src/*"
-      ],
-      "@components/*": [
-        "src/components/*"
-      ],
-      "@screens/*": [
-        "src/screens/*"
-      ],
-      "@types/*": [
-        "src/types/*"
-      ],
-      "@store/*": [
-        "src/store/*"
-      ],
-      "@constants/*": [
-        "src/constants/*"
-      ],
-      "@utils/*": [
-        "src/utils/*"
-      ]
-    }
+    "outDir": "./dist"
   },
   "include": [
     "**/*.ts",

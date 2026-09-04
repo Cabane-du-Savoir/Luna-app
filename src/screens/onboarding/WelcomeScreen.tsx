@@ -44,12 +44,12 @@ const WelcomeScreen: React.FC = () => {
       </Text>
 
       {/* Primary Button */}
-      <Pressable style={styles.primaryButton} onPress={handleStart} onPressIn={handleStart} onClick={handleStart}>
+      <Pressable style={styles.primaryButton} onPress={handleStart}>
         <Text style={styles.primaryButtonText}>Commencer</Text>
       </Pressable>
 
       {/* Text Link */}
-      <Pressable onPress={handleLogin} onPressIn={handleLogin} onClick={handleLogin}>
+      <Pressable onPress={handleLogin}>
         <Text style={styles.link}>J'ai déjà un compte</Text>
       </Pressable>
     </View>
