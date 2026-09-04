@@ -5,6 +5,10 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { OnboardingStackParamList } from '../../types/navigation';
 import { Colors, Typography, Spacing } from '../../constants/tokens';
 import { useAuthStore } from '../../store/authStore';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useDataStore } from '../../store/dataStore';
+import { scheduleCycleReminders } from '../../services/reminders';
+import { calculateNextPeriod } from '../../utils/cycleCalculations';
 
 type InterestsScreenNavigationProp = StackNavigationProp<OnboardingStackParamList, 'Interests'>;
 
@@ -16,6 +20,8 @@ interface Topic {
 const InterestsScreen: React.FC = () => {
   const navigation = useNavigation<InterestsScreenNavigationProp>();
   const setAuthenticated = useAuthStore(state => state.setAuthenticated);
+  const setUser = useAuthStore(state => state.setUser);
+  const setCycleSettings = useDataStore(state => state.setCycleSettings);
   
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
   const [reminder, setReminder] = useState(true);
@@ -36,7 +42,37 @@ const InterestsScreen: React.FC = () => {
   };
 
   const handleFinish = async () => {
-    // Complete onboarding
+    const email = await AsyncStorage.getItem('@luna_onboarding_email');
+    const lastPeriodStart = await AsyncStorage.getItem('@luna_onboarding_last_period');
+    const savedSettings = await AsyncStorage.getItem('@luna_onboarding_cycle_settings');
+    const cycleSettings = savedSettings ? JSON.parse(savedSettings) : {
+      cycleLength: 28,
+      periodLength: 5,
+      regularity: 'unknown',
+    };
+
+    if (lastPeriodStart) {
+      setCycleSettings({ ...cycleSettings, lastPeriodStart });
+      await scheduleCycleReminders(
+        new Date(calculateNextPeriod({ ...cycleSettings, lastPeriodStart }, [])),
+        cycleSettings.cycleLength || 28,
+        reminder,
+      );
+    }
+    const user = {
+      gmail: email || 'local-user',
+      situation: 'not_started' as const,
+      language: 'FR' as const,
+      signupDate: new Date().toISOString(),
+    };
+    await AsyncStorage.setItem('@luna_user', JSON.stringify(user));
+    await AsyncStorage.setItem('@luna_token', `local_token_${Date.now()}`);
+    await AsyncStorage.multiRemove([
+      '@luna_onboarding_email',
+      '@luna_onboarding_last_period',
+      '@luna_onboarding_cycle_settings',
+    ]);
+    setUser(user);
     setAuthenticated(true);
   };
 

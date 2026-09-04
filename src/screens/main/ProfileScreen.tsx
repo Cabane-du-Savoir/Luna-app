@@ -10,6 +10,10 @@ import {
 } from 'react-native';
 import { Colors, Typography, Spacing } from '../../constants/tokens';
 import { useAuthStore } from '../../store/authStore';
+import { useDataStore } from '../../store/dataStore';
+import { useAppStore } from '../../store/appStore';
+import { calculateNextPeriod } from '../../utils/cycleCalculations';
+import { scheduleCycleReminders } from '../../services/reminders';
 
 const ProfileScreen: React.FC = () => {
   const [settings, setSettings] = useState({
@@ -25,6 +29,8 @@ const ProfileScreen: React.FC = () => {
   };
 
   const { logout } = useAuthStore();
+  const cycleSettings = useDataStore(state => state.cycleSettings);
+  const setAppSettings = useAppStore(state => state.setSettings);
   const paid = false;
   const trialDays = 2;
   const lastBackup = '2 jours';
@@ -33,11 +39,20 @@ const ProfileScreen: React.FC = () => {
     logout();
   };
 
-  const toggleSetting = (key: keyof typeof settings) => {
-    setSettings(prev => ({
-      ...prev,
-      [key]: !prev[key],
-    }));
+  const toggleSetting = async (key: keyof typeof settings) => {
+    const nextSettings = {
+      ...settings,
+      [key]: !settings[key],
+    };
+    setSettings(nextSettings);
+    setAppSettings(nextSettings);
+    if (key === 'reminder' && cycleSettings) {
+      await scheduleCycleReminders(
+        new Date(calculateNextPeriod(cycleSettings, [])),
+        cycleSettings.cycleLength,
+        nextSettings.reminder,
+      );
+    }
   };
 
   const handleCopyLink = () => {

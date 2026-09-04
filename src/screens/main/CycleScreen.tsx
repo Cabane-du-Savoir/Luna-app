@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,9 @@ import { Colors, Typography, Spacing } from '../../constants/tokens';
 
 const CycleScreen: React.FC = () => {
   const [selectedDay, setSelectedDay] = useState(new Date().getDate());
+  const [showCourse, setShowCourse] = useState(false);
+  const [courseStep, setCourseStep] = useState(0);
+  const [answer, setAnswer] = useState<number | null>(null);
 
   // Mock data
   const daysUntilPeriod = 12;
@@ -25,6 +28,97 @@ const CycleScreen: React.FC = () => {
     date.setDate(date.getDate() - 3 + i);
     return date;
   });
+
+  const courseSteps = [
+    {
+      title: 'Le cycle commence au jour 1',
+      body: 'Le jour 1 est le premier jour des règles. Chaque nouveau cycle recommence au premier jour des règles suivantes.',
+      exercise: 'Exemple : si tes règles commencent le 3 mai, le 3 mai est le jour 1.',
+    },
+    {
+      title: 'Compter la durée du cycle',
+      body: 'La durée se compte du premier jour des règles jusqu’à la veille des règles suivantes. Elle n’est pas la durée des saignements.',
+      exercise: 'Exemple : début le 3 mai, cycle suivant le 31 mai : 28 jours.',
+    },
+    {
+      title: 'Estimer les prochaines règles',
+      body: 'Pour une première estimation, ajoute la durée habituelle du cycle à la date de début des dernières règles.',
+      exercise: 'Exemple : début le 3 mai + 28 jours = prochaines règles estimées autour du 31 mai.',
+    },
+    {
+      title: 'Une estimation, jamais une certitude',
+      body: 'Le stress, la santé et les changements de rythme peuvent modifier un cycle. Note plusieurs cycles pour mieux reconnaître tes habitudes.',
+      exercise: 'Si tes cycles sont irréguliers, Luna doit afficher une période estimée plutôt qu’un jour précis.',
+    },
+  ];
+
+  const openCourse = () => {
+    setCourseStep(0);
+    setAnswer(null);
+    setShowCourse(true);
+  };
+
+  if (showCourse) {
+    const isQuiz = courseStep === courseSteps.length;
+    const quizCorrect = answer === 1;
+
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <ScrollView style={styles.container} contentContainerStyle={styles.courseContainer}>
+          <View style={styles.courseTopBar}>
+            <TouchableOpacity style={styles.courseBackButton} onPress={() => setShowCourse(false)}>
+              <Text style={styles.courseBackText}>‹</Text>
+            </TouchableOpacity>
+            <Text style={styles.courseProgress}>{isQuiz ? 'Quiz' : `${courseStep + 1} / ${courseSteps.length}`}</Text>
+          </View>
+          <View style={styles.courseIntroMark}>
+            <Text style={styles.courseIntroMarkText}>✦</Text>
+          </View>
+          <Text style={styles.courseTitle}>Comprendre son cycle</Text>
+          <Text style={styles.courseSubtitle}>Un petit cours pour apprendre à compter et mieux observer ses règles.</Text>
+
+          {!isQuiz ? (
+            <View style={styles.lessonCard}>
+              <Text style={styles.lessonNumber}>ÉTAPE {courseStep + 1}</Text>
+              <Text style={styles.lessonTitle}>{courseSteps[courseStep].title}</Text>
+              <Text style={styles.lessonBody}>{courseSteps[courseStep].body}</Text>
+              <View style={styles.exerciseCard}>
+                <Text style={styles.exerciseLabel}>PETIT EXERCICE</Text>
+                <Text style={styles.exerciseText}>{courseSteps[courseStep].exercise}</Text>
+              </View>
+            </View>
+          ) : (
+            <View style={styles.lessonCard}>
+              <Text style={styles.lessonNumber}>À TOI</Text>
+              <Text style={styles.lessonTitle}>Un cycle de 30 jours commence le 1er juin. Quand commence l’estimation suivante ?</Text>
+              {[29, 30, 31].map((value, index) => (
+                <TouchableOpacity key={value} style={[styles.answerOption, answer === index && styles.answerOptionSelected]} onPress={() => setAnswer(index)}>
+                  <Text style={styles.answerOptionText}>{value} juin</Text>
+                </TouchableOpacity>
+              ))}
+              {answer !== null && <Text style={[styles.feedback, quizCorrect ? styles.feedbackGood : styles.feedbackTry]}>{quizCorrect ? 'Bravo. On ajoute 30 jours au 1er juin.' : 'Presque. Recompte en ajoutant la durée complète du cycle.'}</Text>}
+            </View>
+          )}
+
+          <View style={styles.courseActions}>
+            <TouchableOpacity style={styles.courseSecondaryButton} onPress={() => setShowCourse(false)}>
+              <Text style={styles.courseSecondaryText}>Quitter</Text>
+            </TouchableOpacity>
+            {!isQuiz ? (
+              <TouchableOpacity style={styles.coursePrimaryButton} onPress={() => setCourseStep(courseStep + 1)}>
+                <Text style={styles.coursePrimaryText}>Continuer</Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity style={styles.coursePrimaryButton} onPress={() => { setCourseStep(0); setAnswer(null); }}>
+                <Text style={styles.coursePrimaryText}>Recommencer</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+          <Text style={styles.courseDisclaimer}>Les calculs de Luna sont des estimations et ne remplacent pas un avis médical.</Text>
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -87,11 +181,11 @@ const CycleScreen: React.FC = () => {
 
         {/* Action Cards */}
         <View style={styles.actionCardsContainer}>
-          <TouchableOpacity style={styles.actionCard}>
+          <TouchableOpacity style={styles.actionCard} onPress={openCourse}>
             <Text style={styles.actionCardTitle}>📝 Flux</Text>
             <Text style={styles.actionCardSubtitle}>Enregistrer</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.actionCard}>
+          <TouchableOpacity style={styles.actionCard} onPress={openCourse}>
             <Text style={styles.actionCardTitle}>💡 Conseil</Text>
             <Text style={styles.actionCardSubtitle}>du jour</Text>
           </TouchableOpacity>
@@ -336,6 +430,190 @@ const styles = StyleSheet.create({
     fontSize: Typography.sizes.caption,
     fontFamily: Typography.families.body,
     color: Colors.Text,
+  },
+  courseContainer: {
+    paddingBottom: 32,
+  },
+  courseTopBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: Spacing.screenHorizontalPadding,
+    paddingVertical: 16,
+  },
+  courseBackButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: Colors.BlushLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  courseBackText: {
+    fontSize: 28,
+    lineHeight: 32,
+    color: Colors.Plum,
+  },
+  courseProgress: {
+    fontSize: Typography.sizes.caption,
+    fontFamily: Typography.families.body,
+    color: Colors.Text,
+    opacity: 0.55,
+  },
+  courseIntroMark: {
+    alignSelf: 'center',
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: Colors.Blush,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 8,
+    marginBottom: 16,
+  },
+  courseIntroMarkText: {
+    fontSize: 28,
+    color: Colors.Plum,
+  },
+  courseTitle: {
+    fontSize: Typography.sizes.screenTitle,
+    lineHeight: 34,
+    fontFamily: Typography.families.heading,
+    color: Colors.Text,
+    textAlign: 'center',
+    paddingHorizontal: Spacing.screenHorizontalPadding,
+  },
+  courseSubtitle: {
+    fontSize: Typography.sizes.body,
+    lineHeight: 21,
+    fontFamily: Typography.families.body,
+    color: Colors.Text,
+    opacity: 0.65,
+    textAlign: 'center',
+    paddingHorizontal: Spacing.screenHorizontalPadding,
+    marginTop: 8,
+    marginBottom: 22,
+  },
+  lessonCard: {
+    marginHorizontal: Spacing.screenHorizontalPadding,
+    backgroundColor: Colors.CreamCard,
+    borderWidth: 1,
+    borderColor: Colors.Border,
+    borderRadius: 22,
+    padding: 18,
+  },
+  lessonNumber: {
+    fontSize: Typography.sizes.sectionLabel,
+    letterSpacing: 1.5,
+    fontFamily: Typography.families.body,
+    color: Colors.Rose,
+    marginBottom: 10,
+  },
+  lessonTitle: {
+    fontSize: 24,
+    lineHeight: 28,
+    fontFamily: Typography.families.heading,
+    color: Colors.Text,
+    marginBottom: 10,
+  },
+  lessonBody: {
+    fontSize: Typography.sizes.body,
+    lineHeight: 22,
+    fontFamily: Typography.families.body,
+    color: Colors.Text,
+    opacity: 0.72,
+  },
+  exerciseCard: {
+    backgroundColor: Colors.BlushLight,
+    borderRadius: 16,
+    padding: 14,
+    marginTop: 18,
+  },
+  exerciseLabel: {
+    fontSize: Typography.sizes.sectionLabel,
+    letterSpacing: 1.2,
+    fontFamily: Typography.families.body,
+    color: Colors.Plum,
+    marginBottom: 6,
+  },
+  exerciseText: {
+    fontSize: Typography.sizes.secondary,
+    lineHeight: 20,
+    fontFamily: Typography.families.body,
+    color: Colors.Text,
+  },
+  answerOption: {
+    minHeight: 48,
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: Colors.Border,
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    marginTop: 10,
+  },
+  answerOptionSelected: {
+    borderColor: Colors.Rose,
+    backgroundColor: Colors.BlushLight,
+  },
+  answerOptionText: {
+    fontSize: Typography.sizes.body,
+    fontFamily: Typography.families.body,
+    color: Colors.Text,
+  },
+  feedback: {
+    fontSize: Typography.sizes.secondary,
+    lineHeight: 19,
+    fontFamily: Typography.families.body,
+    marginTop: 14,
+  },
+  feedbackGood: {
+    color: Colors.Plum,
+  },
+  feedbackTry: {
+    color: Colors.Alert,
+  },
+  courseActions: {
+    flexDirection: 'row',
+    gap: 10,
+    paddingHorizontal: Spacing.screenHorizontalPadding,
+    marginTop: 18,
+  },
+  courseSecondaryButton: {
+    flex: 1,
+    minHeight: 52,
+    borderWidth: 1,
+    borderColor: Colors.BorderWarm,
+    borderRadius: 26,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  courseSecondaryText: {
+    fontSize: Typography.sizes.buttonLabel,
+    fontFamily: Typography.families.body,
+    color: Colors.Plum,
+  },
+  coursePrimaryButton: {
+    flex: 1,
+    minHeight: 52,
+    borderRadius: 26,
+    backgroundColor: Colors.Plum,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  coursePrimaryText: {
+    fontSize: Typography.sizes.buttonLabel,
+    fontFamily: Typography.families.body,
+    color: Colors.TextOnPlum,
+  },
+  courseDisclaimer: {
+    fontSize: Typography.sizes.caption,
+    lineHeight: 17,
+    fontFamily: Typography.families.body,
+    color: Colors.Text,
+    opacity: 0.45,
+    textAlign: 'center',
+    paddingHorizontal: Spacing.screenHorizontalPadding,
+    marginTop: 16,
   },
 });
 

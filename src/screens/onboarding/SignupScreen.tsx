@@ -18,16 +18,8 @@ const SignupScreen: React.FC = () => {
   const handleGoogleSignup = async () => {
     // In a real app, this would use Google Sign-In
     if (email) {
-      const user = {
-        gmail: email,
-        situation: 'not_started' as const,
-        language: 'FR' as const,
-        signupDate: new Date().toISOString(),
-      };
-      await AsyncStorage.setItem('@luna_user', JSON.stringify(user));
-      await AsyncStorage.setItem('@luna_token', 'mock_token_' + Date.now());
-      setUser(user);
-      setAuthenticated(true);
+      await AsyncStorage.setItem('@luna_onboarding_email', email.trim());
+      navigation.navigate('Name');
     }
   };
 
@@ -49,7 +41,7 @@ const SignupScreen: React.FC = () => {
           keyboardType="email-address"
         />
 
-        <TouchableOpacity style={styles.primaryButton} onPress={handleGoogleSignup}>
+        <TouchableOpacity style={[styles.primaryButton, !email.trim() && styles.disabled]} onPress={handleGoogleSignup} disabled={!email.trim()}>
           <Text style={styles.primaryButtonText}>Continuer</Text>
         </TouchableOpacity>
 
@@ -122,6 +114,9 @@ const styles = StyleSheet.create({
     fontFamily: Typography.families.body,
     textAlign: 'center',
     opacity: 0.65,
+  },
+  disabled: {
+    opacity: 0.5,
   },
 });
 

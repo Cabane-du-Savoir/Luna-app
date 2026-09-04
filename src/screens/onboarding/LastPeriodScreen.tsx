@@ -5,8 +5,7 @@ import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { OnboardingStackParamList } from '../../types/navigation';
 import { Colors, Typography, Spacing } from '../../constants/tokens';
-import { formatDistanceToNow } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type LastPeriodScreenNavigationProp = StackNavigationProp<OnboardingStackParamList, 'LastPeriod'>;
 
@@ -19,7 +18,8 @@ const LastPeriodScreen: React.FC = () => {
   
   const daysLabel = daysAgo === 1 ? 'jour' : 'jours';
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
+    await AsyncStorage.setItem('@luna_onboarding_last_period', lastPeriodDate.toISOString());
     navigation.navigate('CycleLength');
   };
 

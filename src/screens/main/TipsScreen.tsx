@@ -152,7 +152,7 @@ const TipsScreen: React.FC = () => {
               </View>
               <View style={styles.articleBadge}>
                 <Text style={styles.articleBadgeText}>
-                  {article.locked ? '🔒' : '›'}
+                  {article.free || paid ? '›' : '🔒'}
                 </Text>
               </View>
             </TouchableOpacity>

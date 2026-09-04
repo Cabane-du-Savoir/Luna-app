@@ -6,6 +6,8 @@ import {
   ScrollView,
   TouchableOpacity,
   SafeAreaView,
+  TextInput,
+  Modal,
 } from 'react-native';
 import { Colors, Typography, Spacing } from '../../constants/tokens';
 
@@ -21,6 +23,10 @@ interface Question {
 
 const QuestionsScreen: React.FC = () => {
   const [selectedTab, setSelectedTab] = useState<'recent' | 'unanswered'>('recent');
+  const [askOpen, setAskOpen] = useState(false);
+  const [questionText, setQuestionText] = useState('');
+  const [questionTag, setQuestionTag] = useState('Cycle');
+  const [submitted, setSubmitted] = useState(false);
 
   const questions: Question[] = [
     {
@@ -56,6 +62,13 @@ const QuestionsScreen: React.FC = () => {
     ? questions 
     : questions.filter(q => !q.answered);
 
+  const submitQuestion = () => {
+    if (!questionText.trim()) return;
+    setSubmitted(true);
+    setQuestionText('');
+    setAskOpen(false);
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
@@ -74,7 +87,7 @@ const QuestionsScreen: React.FC = () => {
         </View>
 
         {/* Ask Question Card */}
-        <TouchableOpacity style={styles.askCard}>
+        <TouchableOpacity style={styles.askCard} onPress={() => setAskOpen(true)}>
           <Text style={styles.askCardIcon}>+</Text>
           <View style={styles.askCardContent}>
             <Text style={styles.askCardTitle}>Poser ma question</Text>
@@ -101,6 +114,7 @@ const QuestionsScreen: React.FC = () => {
             </Text>
           </TouchableOpacity>
         </View>
+        {submitted && <Text style={styles.submittedMessage}>Question envoyée anonymement. Luna prépare une réponse.</Text>}
 
         {/* Questions List */}
         <View style={styles.questionsContainer}>
@@ -147,6 +161,36 @@ const QuestionsScreen: React.FC = () => {
           ))}
         </View>
       </ScrollView>
+      <Modal visible={askOpen} transparent animationType="slide" onRequestClose={() => setAskOpen(false)}>
+        <View style={styles.modalBackdrop}>
+          <View style={styles.askSheet}>
+            <View style={styles.sheetHandle} />
+            <Text style={styles.sheetTitle}>Poser ma question</Text>
+            <Text style={styles.sheetDescription}>Ta question sera publiée anonymement. Luna ne pose pas de diagnostic.</Text>
+            <TextInput
+              style={styles.questionInput}
+              multiline
+              maxLength={500}
+              placeholder="Écris ta question ici..."
+              placeholderTextColor={Colors.Text}
+              value={questionText}
+              onChangeText={setQuestionText}
+              textAlignVertical="top"
+            />
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tagScroll}>
+              {['Cycle', 'Toilette', 'Douleurs', 'Symptômes'].map(tag => (
+                <TouchableOpacity key={tag} style={[styles.tagChip, questionTag === tag && styles.tagChipSelected]} onPress={() => setQuestionTag(tag)}>
+                  <Text style={styles.tagChipText}>{tag}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+            <TouchableOpacity style={[styles.sendButton, !questionText.trim() && styles.sendButtonDisabled]} onPress={submitQuestion} disabled={!questionText.trim()}>
+              <Text style={styles.sendButtonText}>Envoyer</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setAskOpen(false)}><Text style={styles.cancelText}>Plus tard</Text></TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -237,6 +281,101 @@ const styles = StyleSheet.create({
     fontFamily: Typography.families.body,
     color: Colors.Alert,
     marginTop: 8,
+  },
+  submittedMessage: {
+    marginHorizontal: Spacing.screenHorizontalPadding,
+    marginBottom: 12,
+    fontSize: Typography.sizes.secondary,
+    fontFamily: Typography.families.body,
+    color: Colors.Plum,
+  },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(74,33,53,.4)',
+    justifyContent: 'flex-end',
+  },
+  askSheet: {
+    backgroundColor: Colors.Cream,
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    padding: 22,
+    paddingBottom: 30,
+  },
+  sheetHandle: {
+    width: 44,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: Colors.Blush,
+    alignSelf: 'center',
+    marginBottom: 18,
+  },
+  sheetTitle: {
+    fontSize: Typography.sizes.screenTitle,
+    fontFamily: Typography.families.heading,
+    color: Colors.Text,
+  },
+  sheetDescription: {
+    fontSize: Typography.sizes.secondary,
+    fontFamily: Typography.families.body,
+    lineHeight: 19,
+    color: Colors.Text,
+    opacity: 0.65,
+    marginTop: 4,
+    marginBottom: 14,
+  },
+  questionInput: {
+    minHeight: 96,
+    borderWidth: 1,
+    borderColor: Colors.BorderWarm,
+    borderRadius: 16,
+    backgroundColor: Colors.BlushLight,
+    padding: 14,
+    fontSize: Typography.sizes.body,
+    fontFamily: Typography.families.body,
+    color: Colors.Text,
+  },
+  tagScroll: {
+    marginVertical: 14,
+  },
+  tagChip: {
+    minHeight: 44,
+    borderWidth: 1,
+    borderColor: Colors.Border,
+    borderRadius: 22,
+    paddingHorizontal: 16,
+    justifyContent: 'center',
+    marginRight: 8,
+  },
+  tagChipSelected: {
+    borderColor: Colors.Rose,
+    backgroundColor: Colors.BlushLight,
+  },
+  tagChipText: {
+    fontSize: Typography.sizes.secondary,
+    fontFamily: Typography.families.body,
+    color: Colors.Text,
+  },
+  sendButton: {
+    minHeight: 52,
+    borderRadius: 26,
+    backgroundColor: Colors.Plum,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sendButtonDisabled: {
+    opacity: 0.5,
+  },
+  sendButtonText: {
+    fontSize: Typography.sizes.buttonLabel,
+    fontFamily: Typography.families.body,
+    color: Colors.TextOnPlum,
+  },
+  cancelText: {
+    textAlign: 'center',
+    marginTop: 14,
+    fontSize: Typography.sizes.secondary,
+    fontFamily: Typography.families.body,
+    color: Colors.Plum,
   },
   tabsContainer: {
     flexDirection: 'row',

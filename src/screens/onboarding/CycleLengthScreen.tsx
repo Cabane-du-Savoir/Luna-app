@@ -4,6 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { OnboardingStackParamList } from '../../types/navigation';
 import { Colors, Typography, Spacing } from '../../constants/tokens';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type CycleLengthScreenNavigationProp = StackNavigationProp<OnboardingStackParamList, 'CycleLength'>;
 
@@ -31,7 +32,12 @@ const CycleLengthScreen: React.FC = () => {
     { label: '7', value: 7, type: 'period' },
   ];
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
+    await AsyncStorage.setItem('@luna_onboarding_cycle_settings', JSON.stringify({
+      cycleLength: cycleLength || 28,
+      periodLength,
+      regularity: 'regular',
+    }));
     navigation.navigate('Interests');
   };
 
