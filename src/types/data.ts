@@ -39,7 +39,7 @@ export interface JournalEntry {
 // Content
 export interface Article {
   id: string;
-  topic: 'Toilette' | 'Odeurs' | 'Rasage' | 'Démangeaisons' | 'Exercices';
+  topic: 'Toilette' | 'Odeurs' | 'Rasage' | 'Démangeaisons' | 'Exercices' | 'Rapports' | 'Alimentation' | 'Prévention';
   title: string;
   intro: string;
   steps: ArticleStep[];

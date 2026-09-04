@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -6,18 +6,24 @@ import {
   ScrollView,
   TouchableOpacity,
   SafeAreaView,
-  Switch,
+  TextInput,
 } from 'react-native';
 import { Colors, Typography, Spacing } from '../../constants/tokens';
+import { useDataStore } from '../../store/dataStore';
+import { Flow, Mood } from '../../types/data';
 
-type Flow = 'none' | 'light' | 'medium' | 'heavy';
-type Mood = 'good' | 'tired' | 'irritable' | 'sad';
+const todayKey = new Date().toISOString().slice(0, 10);
 
 const JournalScreen: React.FC = () => {
   const [flow, setFlow] = useState<Flow | null>(null);
   const [mood, setMood] = useState<Mood | null>(null);
   const [symptoms, setSymptoms] = useState<string[]>([]);
+  const [notes, setNotes] = useState('');
+  const [search, setSearch] = useState('');
   const [isSaved, setIsSaved] = useState(false);
+  const entries = useDataStore(state => state.journalEntries);
+  const getJournalEntry = useDataStore(state => state.getJournalEntry);
+  const addJournalEntry = useDataStore(state => state.addJournalEntry);
 
   const flowOptions: Flow[] = ['none', 'light', 'medium', 'heavy'];
   const moodOptions: { id: Mood; label: string; emoji: string }[] = [
@@ -38,10 +44,40 @@ const JournalScreen: React.FC = () => {
     'Autre',
   ];
 
+  useEffect(() => {
+    const entry = getJournalEntry(todayKey);
+    if (entry) {
+      setFlow(entry.flow ?? null);
+      setMood(entry.mood ?? null);
+      setSymptoms(entry.symptoms);
+      setNotes(entry.notes ?? '');
+    }
+  }, [getJournalEntry]);
+
   const handleSave = () => {
+    addJournalEntry({
+      date: todayKey,
+      flow: flow ?? undefined,
+      mood: mood ?? undefined,
+      symptoms,
+      notes: notes.trim() || undefined,
+    });
     setIsSaved(true);
     setTimeout(() => setIsSaved(false), 2000);
   };
+
+  const filteredEntries = entries
+    .slice()
+    .sort((first, second) => second.date.localeCompare(first.date))
+    .filter(entry => {
+      const content = `${entry.date} ${entry.flow ?? ''} ${entry.mood ?? ''} ${entry.symptoms.join(' ')} ${entry.notes ?? ''}`;
+      return content.toLocaleLowerCase('fr-FR').includes(search.trim().toLocaleLowerCase('fr-FR'));
+    });
+
+  const formatEntry = (value: string) => new Date(`${value}T12:00:00`).toLocaleDateString('fr-FR', {
+    day: 'numeric',
+    month: 'short',
+  });
 
   const toggleSymptom = (symptom: string) => {
     setSymptoms(prev =>
@@ -51,7 +87,7 @@ const JournalScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      <ScrollView style={styles.container} contentContainerStyle={styles.screenContent} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.title}>Journal</Text>
@@ -125,6 +161,20 @@ const JournalScreen: React.FC = () => {
           </View>
         </View>
 
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>Notes</Text>
+          <TextInput
+            value={notes}
+            onChangeText={setNotes}
+            placeholder="Comment te sens-tu aujourd'hui ?"
+            placeholderTextColor="#927b85"
+            multiline
+            maxLength={500}
+            textAlignVertical="top"
+            style={styles.notesInput}
+          />
+        </View>
+
         {/* Save Button */}
         <TouchableOpacity
           style={styles.saveButton}
@@ -137,15 +187,29 @@ const JournalScreen: React.FC = () => {
 
         {/* Recent Entries */}
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Récemment</Text>
-          <View style={styles.entryRow}>
-            <Text style={styles.entryDate}>Hier</Text>
-            <Text style={styles.entrySummary}>Léger flux · Bien · Fatigue</Text>
-          </View>
-          <View style={styles.entryRow}>
-            <Text style={styles.entryDate}>2 jours</Text>
-            <Text style={styles.entrySummary}>Moyen · Fatiguée · Crampes</Text>
-          </View>
+          <Text style={styles.sectionLabel}>Historique</Text>
+          <TextInput
+            value={search}
+            onChangeText={setSearch}
+            placeholder="Rechercher dans le journal"
+            placeholderTextColor="#927b85"
+            style={styles.searchInput}
+          />
+          {filteredEntries.length === 0 ? (
+            <Text style={styles.emptyText}>Aucune entrée trouvée. Enregistre ton premier ressenti aujourd'hui.</Text>
+          ) : (
+            filteredEntries.slice(0, 20).map(entry => (
+              <View key={entry.date} style={styles.entryRow}>
+                <Text style={styles.entryDate}>{formatEntry(entry.date)}</Text>
+                <View style={styles.entryContent}>
+                  <Text style={styles.entrySummary}>
+                    {[entry.flow && { none: 'Rien', light: 'Léger', medium: 'Moyen', heavy: 'Abondant' }[entry.flow], entry.mood && { good: 'Bien', tired: 'Fatiguée', irritable: 'À cran', sad: 'Triste' }[entry.mood], ...entry.symptoms].filter(Boolean).join(' · ') || 'Note enregistrée'}
+                  </Text>
+                  {entry.notes ? <Text style={styles.entryNote} numberOfLines={1}>{entry.notes}</Text> : null}
+                </View>
+              </View>
+            ))
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -160,6 +224,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.Cream,
+  },
+  screenContent: {
+    paddingBottom: 24,
   },
   header: {
     paddingHorizontal: Spacing.screenHorizontalPadding,
@@ -215,14 +282,14 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   moodOption: {
+    flex: 1,
     alignItems: 'center',
     paddingVertical: 12,
+    paddingHorizontal: 2,
   },
   moodOptionSelected: {
     backgroundColor: Colors.BlushLight,
-    paddingVertical: 12,
     borderRadius: 16,
-    paddingHorizontal: 12,
   },
   moodEmoji: {
     fontSize: 28,
@@ -259,6 +326,17 @@ const styles = StyleSheet.create({
     color: Colors.Plum,
     fontWeight: '500',
   },
+  notesInput: {
+    minHeight: 96,
+    borderWidth: 1,
+    borderColor: Colors.Border,
+    borderRadius: 16,
+    backgroundColor: Colors.CreamCard,
+    padding: 14,
+    fontSize: Typography.sizes.body,
+    fontFamily: Typography.families.body,
+    color: Colors.Text,
+  },
   saveButton: {
     marginHorizontal: Spacing.screenHorizontalPadding,
     backgroundColor: Colors.Plum,
@@ -275,7 +353,6 @@ const styles = StyleSheet.create({
   },
   entryRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     paddingVertical: 8,
     borderBottomWidth: 1,
     borderBottomColor: Colors.Border,
@@ -285,11 +362,42 @@ const styles = StyleSheet.create({
     fontFamily: Typography.families.body,
     color: Colors.Text,
     opacity: 0.65,
+    width: 58,
+  },
+  entryContent: {
+    flex: 1,
   },
   entrySummary: {
     fontSize: Typography.sizes.secondary,
     fontFamily: Typography.families.body,
     color: Colors.Text,
+  },
+  entryNote: {
+    fontSize: Typography.sizes.caption,
+    fontFamily: Typography.families.body,
+    color: Colors.Text,
+    opacity: 0.65,
+    marginTop: 2,
+  },
+  searchInput: {
+    minHeight: 44,
+    borderWidth: 1,
+    borderColor: Colors.Border,
+    borderRadius: 16,
+    backgroundColor: Colors.CreamCard,
+    paddingHorizontal: 14,
+    fontSize: Typography.sizes.body,
+    fontFamily: Typography.families.body,
+    color: Colors.Text,
+    marginBottom: 8,
+  },
+  emptyText: {
+    fontSize: Typography.sizes.secondary,
+    lineHeight: 20,
+    fontFamily: Typography.families.body,
+    color: Colors.Text,
+    opacity: 0.65,
+    paddingVertical: 8,
   },
 });
 

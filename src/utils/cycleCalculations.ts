@@ -21,7 +21,10 @@ export const calculateNextPeriod = (
   
   // Otherwise use the declared cycle length
   const nextDate = new Date(lastPeriodDate);
-  nextDate.setDate(nextDate.getDate() + settings.cycleLength);
+  const today = new Date();
+  while (nextDate <= today) {
+    nextDate.setDate(nextDate.getDate() + settings.cycleLength);
+  }
   return nextDate.toISOString();
 };
 

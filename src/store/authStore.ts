@@ -32,7 +32,10 @@ export const useAuthStore = create<AuthState>((set) => ({
     AsyncStorage.setItem('@luna_token', token);
   },
   setTrialDays: (days: number) => set({ trialDays: days }),
-  setPaid: (paid: boolean) => set({ paid }),
+  setPaid: (paid: boolean) => {
+    set({ paid });
+    void AsyncStorage.setItem('@luna_paid', JSON.stringify(paid));
+  },
 
   logout: () => {
     void AsyncStorage.removeItem('@luna_token');
@@ -44,11 +47,13 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       const token = await AsyncStorage.getItem('@luna_token');
       const user = await AsyncStorage.getItem('@luna_user');
+      const paid = await AsyncStorage.getItem('@luna_paid');
       if (token && user) {
         set({
           token,
           user: JSON.parse(user),
           isAuthenticated: true,
+          paid: paid === 'true',
         });
       }
     } catch (e) {

@@ -2,6 +2,87 @@ import { Article } from '../types/data';
 
 export const articlesData: Article[] = [
   {
+    id: 'hygiene-apres-rapport',
+    topic: 'Rapports',
+    title: 'Après un rapport : les gestes simples',
+    intro: 'Des gestes doux pour le confort intime après un rapport sexuel.',
+    language: 'FR',
+    free: true,
+    image: 'rapports',
+    steps: [
+      {
+        number: 1,
+        title: 'Urine si tu en ressens le besoin',
+        body: 'Uriner après un rapport peut aider à évacuer les bactéries proches de l’urètre et peut réduire le risque d’infection urinaire chez certaines personnes.',
+      },
+      {
+        number: 2,
+        title: 'Lave seulement l’extérieur',
+        body: 'Rince la vulve à l’eau tiède et sèche en tamponnant avec une serviette propre. Le vagin se nettoie naturellement: aucun lavage interne n’est nécessaire.',
+      },
+      {
+        number: 3,
+        title: 'Observe ton confort',
+        body: 'Une douleur, des brûlures, des saignements inhabituels ou une odeur forte qui persistent méritent l’avis d’un professionnel de santé.',
+      },
+    ],
+    avoid: 'Évite les douches vaginales, sprays parfumés et savons agressifs après un rapport: ils peuvent irriter et déséquilibrer la flore vaginale.',
+  },
+  {
+    id: 'alimentation-regles',
+    topic: 'Alimentation',
+    title: 'Fruits et règles : ce qui aide vraiment',
+    intro: 'Aucun fruit ne déclenche ni n’augmente les menstruations. Une alimentation variée peut toutefois soutenir ton énergie et ton confort.',
+    language: 'FR',
+    free: true,
+    image: 'alimentation',
+    steps: [
+      {
+        number: 1,
+        title: 'Mange varié et hydrate-toi',
+        body: 'Fruits, légumes, céréales complètes, protéines et eau aident à couvrir tes besoins. Choisis les aliments que tu digères bien pendant tes règles.',
+      },
+      {
+        number: 2,
+        title: 'Pense au fer',
+        body: 'En cas de règles abondantes, privilégie des aliments riches en fer comme les lentilles, haricots, oeufs, viande ou légumes verts. Un fruit riche en vitamine C peut aider l’absorption du fer végétal.',
+      },
+      {
+        number: 3,
+        title: 'Écoute tes symptômes',
+        body: 'Un flux très abondant, des vertiges, une fatigue intense ou des douleurs qui empêchent tes activités doivent être discutés avec un professionnel de santé.',
+      },
+    ],
+    avoid: 'Ne compte pas sur un aliment ou une boisson pour faire venir les règles. En cas de retard inhabituel ou de risque de grossesse, fais un test et demande conseil si besoin.',
+  },
+  {
+    id: 'prevenir-difficultes-menstruelles',
+    topic: 'Prévention',
+    title: 'Prévenir les difficultés liées aux règles',
+    intro: 'Quelques habitudes pour mieux anticiper les règles et savoir quand demander de l’aide.',
+    language: 'FR',
+    free: true,
+    image: 'prevention',
+    steps: [
+      {
+        number: 1,
+        title: 'Note ton cycle et tes symptômes',
+        body: 'Enregistre les dates, le flux, les douleurs et l’humeur. Ces informations aident à reconnaître ton fonctionnement habituel et à préparer un rendez-vous médical si nécessaire.',
+      },
+      {
+        number: 2,
+        title: 'Prépare ton confort',
+        body: 'Garde les protections qui te conviennent, une bouillotte et de l’eau à disposition. Dormir suffisamment et bouger doucement peut aussi aider certaines personnes.',
+      },
+      {
+        number: 3,
+        title: 'Connais les signaux importants',
+        body: 'Consulte en cas de douleur nouvelle ou très forte, de saignements très abondants, de malaise, de fièvre, ou si tes cycles changent beaucoup sans explication.',
+      },
+    ],
+    avoid: 'Ne banalise pas une douleur invalidante ou un saignement qui t’inquiète. Un professionnel de santé peut rechercher une cause et proposer une solution adaptée.',
+  },
+  {
     id: 'toilette-intime',
     topic: 'Toilette',
     title: 'Toilette intime : les bonnes pratiques',

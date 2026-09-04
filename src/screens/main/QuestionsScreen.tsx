@@ -8,6 +8,7 @@ import {
   SafeAreaView,
   TextInput,
   Modal,
+  Alert,
 } from 'react-native';
 import { Colors, Typography, Spacing } from '../../constants/tokens';
 
@@ -27,8 +28,7 @@ const QuestionsScreen: React.FC = () => {
   const [questionText, setQuestionText] = useState('');
   const [questionTag, setQuestionTag] = useState('Cycle');
   const [submitted, setSubmitted] = useState(false);
-
-  const questions: Question[] = [
+  const [questions, setQuestions] = useState<Question[]>([
     {
       id: '1',
       tag: 'Toilette',
@@ -56,7 +56,7 @@ const QuestionsScreen: React.FC = () => {
       answered: true,
       likes: 8,
     },
-  ];
+  ]);
 
   const filteredQuestions = selectedTab === 'recent' 
     ? questions 
@@ -64,14 +64,36 @@ const QuestionsScreen: React.FC = () => {
 
   const submitQuestion = () => {
     if (!questionText.trim()) return;
+    setQuestions(current => [{
+      id: `local-${Date.now()}`,
+      tag: questionTag,
+      content: questionText.trim(),
+      createdAt: 'à l’instant',
+      author: 'Anonyme',
+      answered: false,
+      likes: 0,
+    }, ...current]);
     setSubmitted(true);
     setQuestionText('');
     setAskOpen(false);
   };
 
+  const toggleLike = (id: string) => {
+    setQuestions(current => current.map(question => question.id === id
+      ? { ...question, likes: question.likes + 1 }
+      : question));
+  };
+
+  const reportQuestion = (id: string) => {
+    Alert.alert('Signaler cette question ?', 'Elle sera masquée sur cet appareil en attendant une modération.', [
+      { text: 'Annuler', style: 'cancel' },
+      { text: 'Signaler', style: 'destructive', onPress: () => setQuestions(current => current.filter(question => question.id !== id)) },
+    ]);
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      <ScrollView style={styles.container} contentContainerStyle={styles.screenContent} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.title}>Questions</Text>
@@ -152,10 +174,13 @@ const QuestionsScreen: React.FC = () => {
 
               {/* Footer */}
               <View style={styles.questionFooter}>
-                <TouchableOpacity style={styles.likeButton}>
+                <TouchableOpacity style={styles.likeButton} onPress={() => toggleLike(question.id)}>
                   <Text style={styles.likeButtonText}>♥ {question.likes}</Text>
                 </TouchableOpacity>
                 <Text style={styles.replyCount}>💬 Répondre</Text>
+                <TouchableOpacity onPress={() => reportQuestion(question.id)} hitSlop={8}>
+                  <Text style={styles.reportText}>Signaler</Text>
+                </TouchableOpacity>
               </View>
             </View>
           ))}
@@ -203,6 +228,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.Cream,
+  },
+  screenContent: {
+    paddingBottom: 24,
   },
   header: {
     paddingHorizontal: Spacing.screenHorizontalPadding,
@@ -369,6 +397,11 @@ const styles = StyleSheet.create({
     fontSize: Typography.sizes.buttonLabel,
     fontFamily: Typography.families.body,
     color: Colors.TextOnPlum,
+  },
+  reportText: {
+    fontSize: Typography.sizes.caption,
+    fontFamily: Typography.families.body,
+    color: Colors.Alert,
   },
   cancelText: {
     textAlign: 'center',

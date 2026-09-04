@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -7,13 +7,16 @@ import {
   TouchableOpacity,
   SafeAreaView,
   Switch,
+  Alert,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Colors, Typography, Spacing } from '../../constants/tokens';
 import { useAuthStore } from '../../store/authStore';
 import { useDataStore } from '../../store/dataStore';
 import { useAppStore } from '../../store/appStore';
 import { calculateNextPeriod } from '../../utils/cycleCalculations';
 import { scheduleCycleReminders } from '../../services/reminders';
+import { getPremiumProduct, purchasePremium, restorePremiumPurchase } from '../../services/purchases';
 
 const ProfileScreen: React.FC = () => {
   const [settings, setSettings] = useState({
@@ -22,18 +25,42 @@ const ProfileScreen: React.FC = () => {
     passcode: false,
     autoBackup: true,
   });
+  const [reminderHour, setReminderHour] = useState(9);
+  const [purchaseLabel, setPurchaseLabel] = useState('Obtenir l’accès à vie');
+  const [isPurchasing, setIsPurchasing] = useState(false);
 
   const user = {
     name: 'Emma',
     email: 'emma@example.com',
   };
 
-  const { logout } = useAuthStore();
+  const { logout, paid, trialDays, setPaid } = useAuthStore();
   const cycleSettings = useDataStore(state => state.cycleSettings);
   const setAppSettings = useAppStore(state => state.setSettings);
-  const paid = false;
-  const trialDays = 2;
   const lastBackup = '2 jours';
+
+  useEffect(() => {
+    const restoreNotificationSettings = async () => {
+      const saved = await AsyncStorage.getItem('@luna_notification_settings');
+      if (!saved) return;
+      const value = JSON.parse(saved);
+      setSettings(value.settings ?? settings);
+      setReminderHour(value.reminderHour ?? 9);
+    };
+    void restoreNotificationSettings();
+  }, []);
+
+  useEffect(() => {
+    const loadPremiumProduct = async () => {
+      try {
+        const product = await getPremiumProduct();
+        if (product) setPurchaseLabel(`Obtenir l’accès à vie · ${product.localizedPrice}`);
+      } catch {
+        // Google Play is unavailable in web preview and before the product is published for testing.
+      }
+    };
+    void loadPremiumProduct();
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -51,7 +78,17 @@ const ProfileScreen: React.FC = () => {
         new Date(calculateNextPeriod(cycleSettings, [])),
         cycleSettings.cycleLength,
         nextSettings.reminder,
+        reminderHour,
       );
+    }
+    await AsyncStorage.setItem('@luna_notification_settings', JSON.stringify({ settings: nextSettings, reminderHour }));
+  };
+
+  const changeReminderHour = async (hour: number) => {
+    setReminderHour(hour);
+    await AsyncStorage.setItem('@luna_notification_settings', JSON.stringify({ settings, reminderHour: hour }));
+    if (settings.reminder && cycleSettings) {
+      await scheduleCycleReminders(new Date(calculateNextPeriod(cycleSettings, [])), cycleSettings.cycleLength, true, hour);
     }
   };
 
@@ -59,9 +96,37 @@ const ProfileScreen: React.FC = () => {
     alert('Lien copié ✓\nluna.app/telecharger');
   };
 
+  const handlePurchase = async () => {
+    setIsPurchasing(true);
+    try {
+      await purchasePremium();
+      setPaid(true);
+      Alert.alert('Accès activé', 'Merci. Tous les contenus premium sont maintenant accessibles.');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Le paiement n’a pas pu être finalisé.';
+      Alert.alert('Achat non finalisé', message);
+    } finally {
+      setIsPurchasing(false);
+    }
+  };
+
+  const handleRestorePurchase = async () => {
+    setIsPurchasing(true);
+    try {
+      const restored = await restorePremiumPurchase();
+      setPaid(restored);
+      Alert.alert(restored ? 'Achat restauré' : 'Aucun achat trouvé', restored ? 'Ton accès à vie est de nouveau actif.' : 'Connecte-toi au compte Google utilisé lors de l’achat.');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'La restauration a échoué.';
+      Alert.alert('Restauration impossible', message);
+    } finally {
+      setIsPurchasing(false);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      <ScrollView style={styles.container} contentContainerStyle={styles.screenContent} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.profileSection}>
@@ -82,8 +147,11 @@ const ProfileScreen: React.FC = () => {
               <Text style={styles.accessLabel}>ESSAI GRATUIT</Text>
               <Text style={styles.accessTitle}>Encore {trialDays} jours</Text>
               <Text style={styles.accessSubtitle}>Ensuite 5 $ une seule fois, à vie</Text>
-              <TouchableOpacity style={styles.payButton}>
-                <Text style={styles.payButtonText}>Payer 5 $</Text>
+              <TouchableOpacity style={[styles.payButton, isPurchasing && styles.payButtonDisabled]} onPress={handlePurchase} disabled={isPurchasing}>
+                <Text style={styles.payButtonText}>{isPurchasing ? 'Connexion à Google Play...' : purchaseLabel}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={handleRestorePurchase} disabled={isPurchasing}>
+                <Text style={styles.restorePurchaseText}>Restaurer un achat</Text>
               </TouchableOpacity>
             </>
           ) : (
@@ -106,6 +174,16 @@ const ProfileScreen: React.FC = () => {
               trackColor={{ false: Colors.Border, true: Colors.Blush }}
               thumbColor={settings.reminder ? Colors.Plum : '#f4f3f4'}
             />
+          </View>
+          <View style={styles.reminderTimeRow}>
+            <Text style={styles.reminderTimeLabel}>Heure du rappel</Text>
+            <View style={styles.hourOptions}>
+              {[8, 9, 18, 20].map(hour => (
+                <TouchableOpacity key={hour} style={[styles.hourOption, reminderHour === hour && styles.hourOptionSelected]} onPress={() => changeReminderHour(hour)}>
+                  <Text style={[styles.hourOptionText, reminderHour === hour && styles.hourOptionTextSelected]}>{hour} h</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
           </View>
 
           <View style={styles.settingRow}>
@@ -206,6 +284,9 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.Cream,
   },
+  screenContent: {
+    paddingBottom: 24,
+  },
   header: {
     paddingHorizontal: Spacing.screenHorizontalPadding,
     paddingVertical: 20,
@@ -284,6 +365,16 @@ const styles = StyleSheet.create({
     fontFamily: Typography.families.body,
     fontWeight: '500',
   },
+  payButtonDisabled: {
+    opacity: 0.6,
+  },
+  restorePurchaseText: {
+    fontSize: Typography.sizes.caption,
+    fontFamily: Typography.families.body,
+    color: Colors.Plum,
+    textAlign: 'center',
+    marginTop: 12,
+  },
   section: {
     paddingHorizontal: Spacing.screenHorizontalPadding,
     marginBottom: Spacing.verticalGapRegular,
@@ -303,6 +394,8 @@ const styles = StyleSheet.create({
     borderBottomColor: Colors.Border,
   },
   settingLabel: {
+    flex: 1,
+    paddingRight: 16,
     fontSize: Typography.sizes.body,
     fontFamily: Typography.families.body,
     color: Colors.Text,
@@ -312,6 +405,45 @@ const styles = StyleSheet.create({
     fontFamily: Typography.families.body,
     color: Colors.Text,
     opacity: 0.65,
+  },
+  reminderTimeRow: {
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.Border,
+  },
+  reminderTimeLabel: {
+    fontSize: Typography.sizes.body,
+    fontFamily: Typography.families.body,
+    color: Colors.Text,
+    marginBottom: 10,
+  },
+  hourOptions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  hourOption: {
+    minWidth: 48,
+    minHeight: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: Colors.Border,
+    borderRadius: 16,
+    backgroundColor: Colors.CreamCard,
+  },
+  hourOptionSelected: {
+    borderColor: Colors.Rose,
+    backgroundColor: Colors.BlushLight,
+  },
+  hourOptionText: {
+    fontSize: Typography.sizes.caption,
+    fontFamily: Typography.families.body,
+    color: Colors.Text,
+  },
+  hourOptionTextSelected: {
+    color: Colors.Plum,
+    fontWeight: '500',
   },
   backupInfo: {
     marginBottom: 12,

@@ -4,7 +4,10 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
+import { useFonts } from 'expo-font';
+import { PlayfairDisplay_400Regular, PlayfairDisplay_500Medium, PlayfairDisplay_600SemiBold } from '@expo-google-fonts/playfair-display';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 // Screens
 import OnboardingStack from './src/navigation/OnboardingStack';
@@ -29,13 +32,27 @@ SplashScreen.preventAutoHideAsync();
 const MainApp = () => {
   return (
     <Tab.Navigator
-      screenOptions={{
+      screenOptions={({ route }) => ({
+        tabBarActiveTintColor: '#7a2d4f',
+        tabBarInactiveTintColor: '#9d8991',
         tabBarStyle: {
           backgroundColor: '#fffdfc',
           borderTopColor: '#f6e7e4',
-          height: 60,
+          height: 64,
+          paddingTop: 4,
         },
-      }}
+        tabBarIcon: ({ color, size }) => {
+          const icons = {
+            Cycle: 'calendar-month',
+            Tips: 'lightbulb-outline',
+            Journal: 'notebook-outline',
+            Questions: 'message-question-outline',
+            Profile: 'account-circle-outline',
+          } as const;
+
+          return <MaterialCommunityIcons name={icons[route.name]} size={size} color={color} />;
+        },
+      })}
     >
       <Tab.Screen
         name="Cycle"
@@ -78,9 +95,16 @@ const MainApp = () => {
 
 export default function App() {
   const [appReady, setAppReady] = useState(false);
+  const [fontsLoaded] = useFonts({
+    PlayfairDisplay_400Regular,
+    PlayfairDisplay_500Medium,
+    PlayfairDisplay_600SemiBold,
+  });
   const { isAuthenticated, restoreToken } = useAuthStore();
 
   useEffect(() => {
+    if (!fontsLoaded) return;
+
     async function prepare() {
       try {
         // Restore token
@@ -95,9 +119,9 @@ export default function App() {
     }
 
     prepare();
-  }, []);
+  }, [fontsLoaded, restoreToken]);
 
-  if (!appReady) {
+  if (!appReady || !fontsLoaded) {
     return null;
   }
 

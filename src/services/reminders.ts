@@ -9,7 +9,7 @@ Notifications.setNotificationHandler({
   }),
 });
 
-export const scheduleCycleReminders = async (nextPeriod: Date, cycleLength: number, enabled: boolean): Promise<void> => {
+export const scheduleCycleReminders = async (nextPeriod: Date, cycleLength: number, enabled: boolean, hour = 9): Promise<void> => {
   if (!enabled || Platform.OS === 'web') return;
 
   const permissions = await Notifications.getPermissionsAsync();
@@ -29,6 +29,7 @@ export const scheduleCycleReminders = async (nextPeriod: Date, cycleLength: numb
   for (let cycle = 0; cycle < 6; cycle += 1) {
     const reminderDate = new Date(nextPeriod);
     reminderDate.setDate(reminderDate.getDate() + cycle * cycleLength - 2);
+    reminderDate.setHours(hour, 0, 0, 0);
     if (reminderDate <= new Date()) continue;
 
     await Notifications.scheduleNotificationAsync({

@@ -19,6 +19,9 @@ const articleImages: Record<string, number> = {
   rasage: require('../../../assets/photos/rasage.png'),
   demangeaisons: require('../../../assets/photos/demangeaisons.png'),
   exercices: require('../../../assets/photos/exercices.png'),
+  rapports: require('../../../assets/photos/bain.png'),
+  alimentation: require('../../../assets/photos/cycle.png'),
+  prevention: require('../../../assets/photos/cycle.png'),
 };
 
 const TipsScreen: React.FC = () => {
@@ -27,7 +30,7 @@ const TipsScreen: React.FC = () => {
   const [paid] = useState(false);
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
 
-  const topics = ['Tout', 'Toilette', 'Odeurs', 'Rasage', 'Démangeaisons', 'Exercices'];
+  const topics = ['Tout', 'Toilette', 'Odeurs', 'Rasage', 'Démangeaisons', 'Exercices', 'Rapports', 'Alimentation', 'Prévention'];
 
   const articles = articlesData;
 

@@ -20,7 +20,7 @@ export const Colors = {
 // Typography
 export const Typography = {
   families: {
-    heading: 'Cormorant',
+    heading: 'PlayfairDisplay_400Regular',
     body: 'Jost',
   },
   sizes: {

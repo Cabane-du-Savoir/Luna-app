@@ -245,8 +245,8 @@ eas submit --platform android
 
 ## 🔒 Confidentialité et Sécurité
 
-- Données locales chiffrées avec AsyncStorage
-- Backup optionnel chiffré sur Firebase
+- Données enregistrées localement avec AsyncStorage
+- Synchronisation Firebase désactivée tant qu'un compte et un projet Firebase ne sont pas configurés
 - Aucune donnée vendue ou partagée
 - Authentification Gmail sécurisée
 - Passcode optionnel à 4 chiffres

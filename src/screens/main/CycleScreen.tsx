@@ -8,21 +8,32 @@ import {
   SafeAreaView,
 } from 'react-native';
 import { Colors, Typography, Spacing } from '../../constants/tokens';
+import { useDataStore } from '../../store/dataStore';
+import { getCurrentDayOfCycle, getCurrentPhase, getDaysUntilPeriod, calculateNextPeriod } from '../../utils/cycleCalculations';
 
 const CycleScreen: React.FC = () => {
+  const cycleSettings = useDataStore(state => state.cycleSettings);
+  const journalEntries = useDataStore(state => state.journalEntries);
   const [selectedDay, setSelectedDay] = useState(new Date().getDate());
   const [showCourse, setShowCourse] = useState(false);
   const [courseStep, setCourseStep] = useState(0);
   const [answer, setAnswer] = useState<number | null>(null);
+  const today = new Date();
 
-  // Mock data
-  const daysUntilPeriod = 12;
-  const currentPhase = 'Phase folliculaire';
-  const currentDayOfCycle = 16;
-  const cycleLength = 28;
+  const cycleLength = cycleSettings?.cycleLength ?? 28;
+  const daysUntilPeriod = cycleSettings ? getDaysUntilPeriod(cycleSettings, []) : 12;
+  const currentPhase = cycleSettings ? getCurrentPhase(cycleSettings, []) : 'Phase folliculaire';
+  const currentDayOfCycle = cycleSettings ? getCurrentDayOfCycle(cycleSettings) : 16;
+  const nextPeriod = cycleSettings ? new Date(calculateNextPeriod(cycleSettings, [])) : null;
+  const monthDays = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+  const periodStart = cycleSettings ? new Date(cycleSettings.lastPeriodStart) : null;
+  const periodLength = cycleSettings?.periodLength ?? 5;
+  const trackedDays = journalEntries.filter(entry => entry.date.slice(0, 7) === today.toISOString().slice(0, 7)).length;
+  const personalizedTip = cycleLength === 28
+    ? 'Avec un cycle habituel de 28 jours, note tes symptômes autour du milieu du cycle et prépare tes protections quelques jours avant la date estimée. Cette estimation ne sert pas de méthode contraceptive.'
+    : `Pour ton cycle habituel de ${cycleLength} jours, Luna estime les prochaines règles à partir de tes dates enregistrées. Note tes symptômes sur plusieurs mois pour suivre tes propres repères.`;
 
   // Generate week days
-  const today = new Date();
   const weekDays = Array.from({ length: 7 }, (_, i) => {
     const date = new Date(today);
     date.setDate(date.getDate() - 3 + i);
@@ -122,7 +133,7 @@ const CycleScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      <ScrollView style={styles.container} contentContainerStyle={styles.screenContent} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.greeting}>
@@ -191,22 +202,36 @@ const CycleScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
 
+        <View style={styles.personalTip}>
+          <Text style={styles.personalTipLabel}>CONSEIL POUR TON CYCLE</Text>
+          <Text style={styles.personalTipTitle}>Cycle de {cycleLength} jours</Text>
+          <Text style={styles.personalTipText}>{personalizedTip}</Text>
+        </View>
+
         {/* Month Calendar */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Calendrier du mois</Text>
           <View style={styles.monthCalendar}>
-            {Array.from({ length: 30 }, (_, i) => (
+            {Array.from({ length: monthDays }, (_, i) => {
+              const date = new Date(today.getFullYear(), today.getMonth(), i + 1);
+              const cycleDay = periodStart ? Math.floor((date.getTime() - periodStart.getTime()) / (1000 * 60 * 60 * 24)) : -1;
+              const dayInCycle = cycleDay >= 0 ? cycleDay % cycleLength : -1;
+              const isPeriodDay = dayInCycle >= 0 && dayInCycle < periodLength;
+              const isFertileDay = dayInCycle >= Math.max(0, cycleLength - 16) && dayInCycle <= Math.max(0, cycleLength - 12);
+
+              return (
               <View
                 key={i}
                 style={[
                   styles.calendarDay,
-                  i < 5 && styles.calendarDayPeriod,
-                  i >= 12 && i < 14 && styles.calendarDayFertile,
+                  isPeriodDay && styles.calendarDayPeriod,
+                  !isPeriodDay && isFertileDay && styles.calendarDayFertile,
                 ]}
               >
                 <Text style={styles.calendarDayText}>{i + 1}</Text>
               </View>
-            ))}
+              );
+            })}
           </View>
           <View style={styles.legend}>
             <View style={styles.legendItem}>
@@ -216,6 +241,20 @@ const CycleScreen: React.FC = () => {
             <View style={styles.legendItem}>
               <View style={[styles.legendDot, styles.dotFertile]} />
               <Text style={styles.legendText}>Fertile</Text>
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.statisticsCard}>
+          <Text style={styles.statisticsLabel}>CE MOIS-CI</Text>
+          <View style={styles.statisticsRow}>
+            <View>
+              <Text style={styles.statisticsNumber}>{trackedDays}</Text>
+              <Text style={styles.statisticsText}>jours enregistrés</Text>
+            </View>
+            <View>
+              <Text style={styles.statisticsNumber}>{nextPeriod ? nextPeriod.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) : '—'}</Text>
+              <Text style={styles.statisticsText}>prochaine estimation</Text>
             </View>
           </View>
         </View>
@@ -232,6 +271,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.Cream,
+  },
+  screenContent: {
+    paddingBottom: 24,
   },
   header: {
     flexDirection: 'row',
@@ -374,6 +416,35 @@ const styles = StyleSheet.create({
     color: Colors.Text,
     opacity: 0.65,
   },
+  personalTip: {
+    marginHorizontal: Spacing.screenHorizontalPadding,
+    marginBottom: Spacing.verticalGapRegular,
+    padding: 17,
+    borderWidth: 1,
+    borderColor: Colors.BorderWarm,
+    borderRadius: 20,
+    backgroundColor: Colors.BlushPale,
+  },
+  personalTipLabel: {
+    fontSize: Typography.sizes.sectionLabel,
+    fontFamily: Typography.families.body,
+    letterSpacing: 1,
+    color: Colors.Plum,
+    marginBottom: 6,
+  },
+  personalTipTitle: {
+    fontSize: Typography.sizes.cardTitle,
+    fontFamily: Typography.families.heading,
+    color: Colors.Text,
+    marginBottom: 6,
+  },
+  personalTipText: {
+    fontSize: Typography.sizes.body,
+    lineHeight: 21,
+    fontFamily: Typography.families.body,
+    color: Colors.Text,
+    opacity: 0.78,
+  },
   monthCalendar: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -430,6 +501,37 @@ const styles = StyleSheet.create({
     fontSize: Typography.sizes.caption,
     fontFamily: Typography.families.body,
     color: Colors.Text,
+  },
+  statisticsCard: {
+    marginHorizontal: Spacing.screenHorizontalPadding,
+    marginBottom: 28,
+    padding: 17,
+    borderWidth: 1,
+    borderColor: Colors.Border,
+    borderRadius: 20,
+    backgroundColor: Colors.CreamCard,
+  },
+  statisticsLabel: {
+    fontSize: Typography.sizes.sectionLabel,
+    fontFamily: Typography.families.body,
+    letterSpacing: 1,
+    color: Colors.Rose,
+    marginBottom: 12,
+  },
+  statisticsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  statisticsNumber: {
+    fontSize: Typography.sizes.cardTitle,
+    fontFamily: Typography.families.heading,
+    color: Colors.Text,
+  },
+  statisticsText: {
+    fontSize: Typography.sizes.caption,
+    fontFamily: Typography.families.body,
+    color: Colors.Text,
+    opacity: 0.65,
   },
   courseContainer: {
     paddingBottom: 32,

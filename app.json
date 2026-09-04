@@ -8,12 +8,16 @@
     "assetBundlePatterns": [
       "**/*"
     ],
+    "plugins": [
+      "react-native-iap"
+    ],
     "ios": {
       "supportsTabletMode": false,
       "bundleIdentifier": "com.luna.app"
     },
     "android": {
-      "package": "com.luna.app"
+      "package": "com.luna.app",
+      "versionCode": 1
     },
     "web": {
       "display": "standalone",

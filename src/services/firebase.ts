@@ -1,13 +1,9 @@
-// Firebase Service - À configurer avec vos clés
-// Ce fichier est un template - À adapter selon votre configuration Firebase
-
 import { getApp, getApps, initializeApp } from 'firebase/app';
 import { getAuth, signInWithCredential, GoogleAuthProvider } from 'firebase/auth';
 import { collection, doc, getDoc, getDocs, setDoc, addDoc, getFirestore } from 'firebase/firestore';
 import { getDownloadURL, getStorage, ref, uploadBytes } from 'firebase/storage';
-import { JournalEntry, Question, User } from '../types/data';
+import { CycleSettings, JournalEntry, Question, User } from '../types/data';
 
-// Configuration Firebase - À remplacer par vos clés
 const firebaseConfig = {
   apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
   authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN,
@@ -17,25 +13,35 @@ const firebaseConfig = {
   appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID,
 };
 
-const hasFirebaseConfig = Boolean(firebaseConfig.apiKey && firebaseConfig.projectId);
-const app = getApps().length > 0
-  ? getApp()
-  : initializeApp(firebaseConfig);
+export const isFirebaseConfigured = Boolean(
+  firebaseConfig.apiKey
+  && firebaseConfig.authDomain
+  && firebaseConfig.projectId
+  && firebaseConfig.storageBucket
+  && firebaseConfig.messagingSenderId
+  && firebaseConfig.appId,
+);
 
-// Services
-export const auth = getAuth(app);
-export const db = getFirestore(app);
-export const storage = getStorage(app);
+const app = isFirebaseConfigured
+  ? (getApps().length > 0 ? getApp() : initializeApp(firebaseConfig))
+  : null;
 
-if (!hasFirebaseConfig && process.env.NODE_ENV === 'production') {
-  throw new Error('Firebase configuration is missing. Add the EXPO_PUBLIC_FIREBASE_* variables.');
-}
+const getFirebaseApp = () => {
+  if (!app) {
+    throw new Error('Firebase is not configured. Add the EXPO_PUBLIC_FIREBASE_* variables before enabling cloud features.');
+  }
+  return app;
+};
+
+const getAuthService = () => getAuth(getFirebaseApp());
+const getDatabase = () => getFirestore(getFirebaseApp());
+const getStorageService = () => getStorage(getFirebaseApp());
 
 // Auth Functions
 export const loginWithGoogle = async (idToken: string) => {
   try {
     const credential = GoogleAuthProvider.credential(idToken);
-    const result = await signInWithCredential(auth, credential);
+    const result = await signInWithCredential(getAuthService(), credential);
     return result.user;
   } catch (error) {
     console.error('Login error:', error);
@@ -45,7 +51,7 @@ export const loginWithGoogle = async (idToken: string) => {
 
 export const logout = async () => {
   try {
-    await auth.signOut();
+    await getAuthService().signOut();
   } catch (error) {
     console.error('Logout error:', error);
     throw error;
@@ -56,31 +62,40 @@ export const logout = async () => {
 export const firestore = {
   // User operations
   async saveUser(userId: string, userData: User) {
-    await setDoc(doc(db, 'users', userId), userData, { merge: true });
+    await setDoc(doc(getDatabase(), 'users', userId), userData, { merge: true });
   },
 
   async getUser(userId: string): Promise<User | null> {
-    const snapshot = await getDoc(doc(db, 'users', userId));
+    const snapshot = await getDoc(doc(getDatabase(), 'users', userId));
     return snapshot.exists() ? snapshot.data() as User : null;
   },
 
   // Journal entries
   async saveJournalEntry(userId: string, entry: JournalEntry) {
-    await setDoc(doc(db, 'users', userId, 'journal', entry.date), entry, { merge: true });
+    await setDoc(doc(getDatabase(), 'users', userId, 'journal', entry.date), entry, { merge: true });
   },
 
   async getJournalEntries(userId: string): Promise<JournalEntry[]> {
-    const snapshot = await getDocs(collection(db, 'users', userId, 'journal'));
+    const snapshot = await getDocs(collection(getDatabase(), 'users', userId, 'journal'));
     return snapshot.docs.map(item => item.data() as JournalEntry);
+  },
+
+  async saveCycleSettings(userId: string, settings: CycleSettings) {
+    await setDoc(doc(getDatabase(), 'users', userId, 'private', 'cycleSettings'), settings);
+  },
+
+  async getCycleSettings(userId: string): Promise<CycleSettings | null> {
+    const snapshot = await getDoc(doc(getDatabase(), 'users', userId, 'private', 'cycleSettings'));
+    return snapshot.exists() ? snapshot.data() as CycleSettings : null;
   },
 
   // Questions
   async postQuestion(userId: string, question: Omit<Question, 'id'>) {
-    await addDoc(collection(db, 'questions'), { ...question, authorId: userId });
+    await addDoc(collection(getDatabase(), 'questions'), { ...question, authorId: userId });
   },
 
   async getQuestions(): Promise<Question[]> {
-    const snapshot = await getDocs(collection(db, 'questions'));
+    const snapshot = await getDocs(collection(getDatabase(), 'questions'));
     return snapshot.docs.map(item => ({ id: item.id, ...item.data() } as Question));
   },
 };
@@ -88,14 +103,14 @@ export const firestore = {
 // Storage Helpers
 export const storage_service = {
   async uploadProfilePhoto(userId: string, photo: Blob): Promise<string> {
-    const photoRef = ref(storage, `users/${userId}/profile.jpg`);
+    const photoRef = ref(getStorageService(), `users/${userId}/profile.jpg`);
     await uploadBytes(photoRef, photo);
     return getDownloadURL(photoRef);
   },
 
   async downloadProfilePhoto(userId: string): Promise<string | null> {
     try {
-      return await getDownloadURL(ref(storage, `users/${userId}/profile.jpg`));
+      return await getDownloadURL(ref(getStorageService(), `users/${userId}/profile.jpg`));
     } catch {
       return null;
     }
