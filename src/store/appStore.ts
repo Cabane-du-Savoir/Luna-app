@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import AsyncStorage from '../utils/storage';
 import { AppState, JournalEntry, Flow, Mood, Article } from '../types/data';
 
 interface AppStore extends AppState {

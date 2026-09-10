@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import AsyncStorage from '../utils/storage';
 import { User } from '../types/data';
 
 interface AuthState {
@@ -11,11 +11,13 @@ interface AuthState {
   
   setUser: (user: User) => void;
   setAuthenticated: (auth: boolean) => void;
+  setIsAuthenticated: (auth: boolean) => void;
   setToken: (token: string) => void;
   setTrialDays: (days: number) => void;
   setPaid: (paid: boolean) => void;
   logout: () => void;
   restoreToken: () => Promise<void>;
+  loadUser: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -25,11 +27,15 @@ export const useAuthStore = create<AuthState>((set) => ({
   trialDays: 3, // Default trial period
   paid: false,
 
-  setUser: (user: User) => set({ user }),
+  setUser: (user: User) => {
+    set({ user });
+    void AsyncStorage.setItem('@luna_user', JSON.stringify(user));
+  },
   setAuthenticated: (auth: boolean) => set({ isAuthenticated: auth }),
+  setIsAuthenticated: (auth: boolean) => set({ isAuthenticated: auth }),
   setToken: (token: string) => {
     set({ token });
-    AsyncStorage.setItem('@luna_token', token);
+    void AsyncStorage.setItem('@luna_token', token);
   },
   setTrialDays: (days: number) => set({ trialDays: days }),
   setPaid: (paid: boolean) => {
@@ -48,16 +54,32 @@ export const useAuthStore = create<AuthState>((set) => ({
       const token = await AsyncStorage.getItem('@luna_token');
       const user = await AsyncStorage.getItem('@luna_user');
       const paid = await AsyncStorage.getItem('@luna_paid');
-      if (token && user) {
+      if (token || user) {
         set({
-          token,
-          user: JSON.parse(user),
+          token: token || null,
+          user: user ? JSON.parse(user) : null,
           isAuthenticated: true,
           paid: paid === 'true',
         });
       }
     } catch (e) {
       console.error('Failed to restore token', e);
+    }
+  },
+
+  loadUser: async () => {
+    try {
+      const user = await AsyncStorage.getItem('@luna_user');
+      const paid = await AsyncStorage.getItem('@luna_paid');
+      if (user) {
+        set({
+          user: JSON.parse(user),
+          isAuthenticated: true,
+          paid: paid === 'true',
+        });
+      }
+    } catch (e) {
+      console.error('Failed to load user', e);
     }
   },
 }));

@@ -1,53 +1,82 @@
-// User
+// User Model (LUNA V1.1 Spec)
 export interface User {
-  gmail: string;
+  prenom: string;
+  age: number; // min 12, max 55, default 20
+  email?: string | null;
+  hasAccount: boolean;
+  pin?: string | null; // 4 digits
+  isLearningMode: boolean;
+  anonymousByDefault: boolean;
+  createdAt: string;
+
+  // Backward compatibility aliases
+  gmail?: string;
   nickname?: string;
-  age?: number;
-  situation: 'not_started' | 'just_started' | 'had_for_a_while' | 'irregular';
-  language: 'FR' | 'EN';
-  passcodeHash?: string;
-  signupDate: string;
+  situation?: 'not_started' | 'just_started' | 'had_for_a_while' | 'irregular';
+  language?: 'FR' | 'EN';
+  signupDate?: string;
 }
 
-// Cycle
+// Cycle Model & Settings (LUNA V1.1 Spec)
+export type ContraceptionType = 'aucune' | 'pilule' | 'diu' | 'implant' | 'autre';
+
 export interface CycleSettings {
-  cycleLength: number; // 26-35
-  periodLength: number; // 3-7
+  cycleLength: number; // 21-35
+  periodLength: number; // 2-8
   lastPeriodStart: string; // ISO date
   regularity: 'regular' | 'irregular' | 'unknown';
+  contraception: ContraceptionType;
+  isLearningMode?: boolean;
 }
 
 export interface Cycle {
-  startDate: string;
+  id: string | number;
+  startDate: string; // debut regles
+  duration?: number | null; // duree cycle
+  periodDuration?: number | null;
+  contraception: ContraceptionType;
   endDate?: string;
-  observedLength: number;
-  nextPrediction: string;
 }
 
-// Journal
-export type Flow = 'none' | 'light' | 'medium' | 'heavy';
-export type Mood = 'good' | 'tired' | 'irritable' | 'sad';
-
-export interface JournalEntry {
-  date: string;
-  flow?: Flow;
-  mood?: Mood;
-  symptoms: string[];
-  notes?: string;
+// Prediction result with variance and margin (LUNA V1.1 Spec)
+export interface PredictionResult {
+  nextPeriodDate: string | null;
+  displayText: string;
+  daysRemaining: number | null;
+  margin: number; // +-2 or +-3
+  isLearning: boolean;
+  fertilityDisabled: boolean;
+  fertilityWarning?: string;
 }
 
-// Content
-export interface Article {
+// DailyLog Model (LUNA V1.1 Spec)
+export type Flow = 'rien' | 'leger' | 'moyen' | 'abondant' | 'none' | 'light' | 'medium' | 'heavy';
+export type Mood = 'happy' | 'calm' | 'sad' | 'irritable' | 'tired' | 'good';
+
+export interface DailyLog {
   id: string;
-  topic: 'Toilette' | 'Odeurs' | 'Rasage' | 'Démangeaisons' | 'Exercices' | 'Rapports' | 'Alimentation' | 'Prévention';
-  title: string;
-  intro: string;
-  steps: ArticleStep[];
-  avoid: string;
-  image: string;
-  free: boolean;
-  language: 'FR' | 'EN';
+  date: string; // YYYY-MM-DD index
+  flow?: Flow | null;
+  mood?: Mood | null;
+  symptoms: string[];
+  note?: string | null;
 }
+
+// Alias for backwards compatibility
+export type JournalEntry = DailyLog & {
+  notes?: string;
+};
+
+// Content / Tips (LUNA V1.1 Spec)
+export type TipCategory =
+  | 'ALL'
+  | 'TOILETTE'
+  | 'ODEURS'
+  | 'RASAGE'
+  | 'DEMANGEAISONS'
+  | 'DOULEURS'
+  | 'RECETTES'
+  | 'THEMES';
 
 export interface ArticleStep {
   number: number;
@@ -55,41 +84,42 @@ export interface ArticleStep {
   body: string;
 }
 
-// Questions
+export interface Article {
+  id: string;
+  topic: TipCategory | string;
+  title: string;
+  intro: string;
+  steps: ArticleStep[];
+  avoid?: string;
+  image: string;
+  free: boolean; // Must be true for TOILETTE, ODEURS, DEMANGEAISONS, DOULEURS, RASAGE
+  isLocked?: boolean;
+  language: 'FR' | 'EN';
+}
+
+// Questions Model (LUNA V1.1 Spec)
 export interface Question {
   id: string;
-  tag: string;
-  content: string;
+  text: string;
+  isAnonymous: boolean;
+  status: 'pending' | 'answered_ai' | 'answered_pro';
+  aiAnswer?: string | null;
+  proAnswer?: string | null;
+  isVerified: boolean;
   createdAt: string;
-  author: string;
-  answer?: QuestionAnswer;
-  replies: number;
-  likes: number;
-}
+  tag?: string;
+  likes?: number;
 
-export interface QuestionAnswer {
-  id: string;
-  content: string;
-  author: string;
-  verified: boolean;
-  profession: string; // e.g. "sage-femme"
-}
-
-// Purchase
-export interface Purchase {
-  id: string;
-  paid: boolean;
-  method: 'google_play' | 'paypal' | 'card' | 'mobile_money';
-  amount: number;
-  date: string;
-  transactionReference: string;
-  promoCode?: string;
+  // Backward compatibility aliases
+  content?: string;
+  author?: string;
+  replies?: number;
 }
 
 // App State
 export interface AppState {
   auth: boolean;
-  tab: 'cycle' | 'astuces' | 'qa' | 'profil' | 'journal';
+  tab: 'cycle' | 'astuces' | 'qa' | 'questions' | 'profil' | 'journal';
   article: string | null;
   paid: boolean;
   trialDays: number;

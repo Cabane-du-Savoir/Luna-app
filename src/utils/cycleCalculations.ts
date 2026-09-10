@@ -1,87 +1,169 @@
-import { CycleSettings, Cycle } from '../types/data';
+import { CycleSettings, Cycle, PredictionResult, ContraceptionType } from '../types/data';
 
 /**
- * Calculate the next period date based on cycle settings
+ * LUNA V1.1 Prediction Logic
+ * Calculates next period date with statistical margin (+-2j or +-3j)
  */
-export const calculateNextPeriod = (
+export const predictNextPeriodDetailed = (
   settings: CycleSettings,
-  cycles: Cycle[]
-): string => {
-  const lastPeriodDate = new Date(settings.lastPeriodStart);
-  
-  // If we have at least 3 cycles, use the average
-  if (cycles.length >= 3) {
-    const lastThreeCycles = cycles.slice(-3);
-    const totalLength = lastThreeCycles.reduce((sum, cycle) => sum + cycle.observedLength, 0);
-    const averageLength = Math.round(totalLength / 3);
-    const nextDate = new Date(lastPeriodDate);
-    nextDate.setDate(nextDate.getDate() + averageLength);
-    return nextDate.toISOString();
+  cycles: Cycle[] = [],
+  isLearningMode: boolean = false
+): PredictionResult => {
+  const contraception: ContraceptionType = settings.contraception || 'aucune';
+  const fertilityDisabled = contraception !== 'aucune';
+  const fertilityWarning = fertilityDisabled
+    ? 'Prédiction d’ovulation désactivée : la contraception (hormonale ou mécanique) modifie la régularité du cycle naturel.'
+    : undefined;
+
+  // Learning mode check
+  if (isLearningMode || settings.isLearningMode) {
+    return {
+      nextPeriodDate: null,
+      displayText: 'On apprend à connaître ton cycle...',
+      daysRemaining: null,
+      margin: 3,
+      isLearning: true,
+      fertilityDisabled,
+      fertilityWarning,
+    };
   }
-  
-  // Otherwise use the declared cycle length
-  const nextDate = new Date(lastPeriodDate);
+
+  const lastPeriodStart = new Date(settings.lastPeriodStart);
+  if (isNaN(lastPeriodStart.getTime())) {
+    return {
+      nextPeriodDate: null,
+      displayText: 'Date non renseignée',
+      daysRemaining: null,
+      margin: 2,
+      isLearning: true,
+      fertilityDisabled,
+      fertilityWarning,
+    };
+  }
+
+  // Extract recorded cycles durations
+  const validCycles = cycles.filter(c => c.duration && c.duration > 0);
+
+  let predictedDuration = settings.cycleLength || 28;
+  let margin = 2;
+
+  if (validCycles.length >= 2) {
+    const last3 = validCycles.slice(-3).map(c => c.duration as number);
+    const avg = last3.reduce((acc, val) => acc + val, 0) / last3.length;
+    const variance =
+      last3.reduce((acc, val) => acc + Math.pow(val - avg, 2), 0) / last3.length;
+
+    predictedDuration = Math.round(avg);
+    margin = variance > 4 ? 3 : 2;
+  } else if (settings.regularity === 'irregular') {
+    margin = 3;
+  }
+
+  // Advance by predicted duration from lastPeriodStart until it represents next upcoming period
   const today = new Date();
-  while (nextDate <= today) {
-    nextDate.setDate(nextDate.getDate() + settings.cycleLength);
+  today.setHours(0, 0, 0, 0);
+
+  const predictedDate = new Date(lastPeriodStart);
+  predictedDate.setHours(0, 0, 0, 0);
+  predictedDate.setDate(predictedDate.getDate() + predictedDuration);
+
+  // If predicted date is in the past, roll forward
+  while (predictedDate < today) {
+    predictedDate.setDate(predictedDate.getDate() + predictedDuration);
   }
-  return nextDate.toISOString();
+
+  const diffMs = predictedDate.getTime() - today.getTime();
+  const daysRemaining = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
+  const monthName = predictedDate.toLocaleDateString('fr-FR', {
+    day: 'numeric',
+    month: 'long',
+  });
+  const displayText = `${monthName} ±${margin}j`;
+
+  return {
+    nextPeriodDate: predictedDate.toISOString().slice(0, 10),
+    displayText,
+    daysRemaining,
+    margin,
+    isLearning: false,
+    fertilityDisabled,
+    fertilityWarning,
+  };
 };
 
 /**
- * Get the current phase of the cycle
+ * Simple calculation helper for backward compatibility
+ */
+export const calculateNextPeriod = (
+  settings: CycleSettings,
+  cycles: Cycle[] = []
+): string => {
+  const result = predictNextPeriodDetailed(settings, cycles, settings.isLearningMode);
+  if (result.nextPeriodDate) {
+    return result.nextPeriodDate;
+  }
+  const fallback = new Date(settings.lastPeriodStart);
+  fallback.setDate(fallback.getDate() + (settings.cycleLength || 28));
+  return fallback.toISOString();
+};
+
+/**
+ * Current Phase helper
  */
 export const getCurrentPhase = (
   settings: CycleSettings,
-  cycles: Cycle[]
+  cycles: Cycle[] = []
 ): string => {
-  const nextPeriod = new Date(calculateNextPeriod(settings, cycles));
-  const today = new Date();
-  const daysUntilPeriod = Math.ceil(
-    (nextPeriod.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
-  );
+  if (settings.contraception && settings.contraception !== 'aucune') {
+    return 'Cycle sous contraception';
+  }
 
-  if (daysUntilPeriod <= settings.periodLength) {
+  const dayOfCycle = getCurrentDayOfCycle(settings);
+  const periodLength = settings.periodLength || 5;
+  const cycleLength = settings.cycleLength || 28;
+
+  if (dayOfCycle <= periodLength) {
     return 'Menstruation';
-  } else if (daysUntilPeriod <= 7) {
-    return 'Phase lutéale (pré-menstruelle)';
-  } else if (daysUntilPeriod <= settings.cycleLength / 2) {
+  } else if (dayOfCycle < cycleLength / 2 - 2) {
     return 'Phase folliculaire';
+  } else if (dayOfCycle <= cycleLength / 2 + 2) {
+    return 'Fenêtre d’ovulation';
   } else {
     return 'Phase lutéale';
   }
 };
 
 /**
- * Get days until next period
+ * Days until next period
  */
 export const getDaysUntilPeriod = (
   settings: CycleSettings,
-  cycles: Cycle[]
+  cycles: Cycle[] = []
 ): number => {
-  const nextPeriod = new Date(calculateNextPeriod(settings, cycles));
-  const today = new Date();
-  return Math.ceil(
-    (nextPeriod.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
-  );
+  const result = predictNextPeriodDetailed(settings, cycles, settings.isLearningMode);
+  return result.daysRemaining ?? 0;
 };
 
 /**
- * Get the current day of the cycle
+ * Current day of cycle (1-indexed)
  */
-export const getCurrentDayOfCycle = (
-  settings: CycleSettings
-): number => {
+export const getCurrentDayOfCycle = (settings: CycleSettings): number => {
   const lastPeriodDate = new Date(settings.lastPeriodStart);
+  lastPeriodDate.setHours(0, 0, 0, 0);
   const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
   const elapsedDays = Math.floor(
     (today.getTime() - lastPeriodDate.getTime()) / (1000 * 60 * 60 * 24)
   );
-  return ((elapsedDays % settings.cycleLength) + settings.cycleLength) % settings.cycleLength + 1;
+  const length = settings.cycleLength || 28;
+
+  return ((elapsedDays % length) + length) % length + 1;
 };
 
 /**
- * Format a date to a readable string
+ * Format date in French
  */
 export const formatDate = (date: string | Date): string => {
   const d = typeof date === 'string' ? new Date(date) : date;
@@ -94,7 +176,7 @@ export const formatDate = (date: string | Date): string => {
 };
 
 /**
- * Get relative time (e.g., "2 days ago", "in 3 days")
+ * Relative time helper
  */
 export const getRelativeTime = (date: string | Date): string => {
   const d = typeof date === 'string' ? new Date(date) : date;
@@ -102,7 +184,7 @@ export const getRelativeTime = (date: string | Date): string => {
   const diffTime = Math.abs(now.getTime() - d.getTime());
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-  if (diffDays === 0) return 'Aujourd\'hui';
+  if (diffDays === 0) return 'Aujourd’hui';
   if (diffDays === 1) return 'Hier';
   if (diffDays <= 7) return `Il y a ${diffDays} jours`;
   if (diffDays <= 30) return `Il y a ${Math.ceil(diffDays / 7)} semaines`;
@@ -110,21 +192,7 @@ export const getRelativeTime = (date: string | Date): string => {
 };
 
 /**
- * Validate cycle settings
- */
-export const validateCycleSettings = (settings: CycleSettings): boolean => {
-  return (
-    settings.cycleLength >= 21 &&
-    settings.cycleLength <= 35 &&
-    settings.periodLength >= 2 &&
-    settings.periodLength <= 7 &&
-    settings.regularity !== undefined &&
-    settings.lastPeriodStart !== undefined
-  );
-};
-
-/**
- * Get week days array
+ * Week days around center date
  */
 export const getWeekDays = (centerDate: Date = new Date()): Date[] => {
   const days: Date[] = [];
@@ -135,28 +203,6 @@ export const getWeekDays = (centerDate: Date = new Date()): Date[] => {
     const date = new Date(startDate);
     date.setDate(date.getDate() + i);
     days.push(date);
-  }
-
-  return days;
-};
-
-/**
- * Get month calendar array
- */
-export const getMonthCalendar = (date: Date = new Date()): Date[] => {
-  const year = date.getFullYear();
-  const month = date.getMonth();
-  const firstDay = new Date(year, month, 1);
-  const lastDay = new Date(year, month + 1, 0);
-  const startDate = new Date(firstDay);
-  startDate.setDate(startDate.getDate() - firstDay.getDay());
-
-  const days: Date[] = [];
-  const currentDate = new Date(startDate);
-
-  while (currentDate <= lastDay || currentDate.getDay() !== 0) {
-    days.push(new Date(currentDate));
-    currentDate.setDate(currentDate.getDate() + 1);
   }
 
   return days;
