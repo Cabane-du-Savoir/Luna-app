@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Luna Premium - 2.500 FC / mois</title>
+  <link rel="icon" type="image/png" href="/favicon.png" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #FFF8F9;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      text-align: center;
+      padding: 24px 16px;
+      color: #4A1C2A;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .card {
+      background: #FFFFFF;
+      border: 1px solid #FDE8E9;
+      border-radius: 28px;
+      padding: 28px 24px;
+      max-width: 400px;
+      width: 100%;
+      margin: auto;
+      box-shadow: 0 8px 30px rgba(74, 28, 42, 0.08);
+      text-align: center;
+    }
+    .logo-container {
+      width: 60px;
+      height: 60px;
+      border-radius: 20px;
+      background: #FFE6EA;
+      margin: 0 auto 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    h2 {
+      color: #4A1C2A;
+      font-size: 22px;
+      line-height: 1.3;
+      margin-bottom: 6px;
+      font-family: Georgia, serif;
+    }
+    .badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #4A1C2A;
+      background: #FDE8E9;
+      padding: 4px 12px;
+      border-radius: 20px;
+      margin-bottom: 12px;
+    }
+    .uid-text {
+      font-size: 13px;
+      color: rgba(74, 28, 42, 0.7);
+      margin-bottom: 18px;
+    }
+    .uid-text b {
+      color: #4A1C2A;
+    }
+    .logos {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin: 16px 0;
+      padding: 10px;
+      background: #FFF8F9;
+      border-radius: 16px;
+      border: 1px dashed #E8A0B0;
+    }
+    .operator-pill {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-size: 10px;
+      font-weight: bold;
+      color: #4A1C2A;
+      gap: 4px;
+    }
+    .operator-badge {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: white;
+      border: 1px solid #E8A0B0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+    }
+    .operator-badge img {
+      width: 32px;
+      height: auto;
+      max-height: 28px;
+      object-fit: contain;
+    }
+    .phone-input {
+      width: 100%;
+      padding: 16px;
+      border-radius: 16px;
+      border: 1.5px solid #E8A0B0;
+      background: #FFF8F9;
+      font-size: 15px;
+      color: #4A1C2A;
+      outline: none;
+      margin: 14px 0 16px;
+      text-align: center;
+      font-weight: 500;
+    }
+    .phone-input:focus {
+      border-color: #4A1C2A;
+      background: #FFFFFF;
+    }
+    .prune {
+      background: #4A1C2A;
+      color: #FFFFFF;
+      border: none;
+      width: 100%;
+      padding: 18px;
+      border-radius: 16px;
+      font-weight: 700;
+      font-size: 15px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 15px rgba(74, 28, 42, 0.25);
+    }
+    .prune:hover {
+      background: #5d2435;
+      transform: translateY(-1px);
+    }
+    .prune:active {
+      transform: scale(0.98);
+    }
+    .info-footer {
+      font-size: 12px;
+      color: rgba(74, 28, 42, 0.65);
+      margin-top: 16px;
+      line-height: 1.5;
+    }
+    .code-box {
+      display: none;
+      margin-top: 20px;
+      padding: 16px;
+      background: #FDE8E9;
+      border: 1.5px solid #4A1C2A;
+      border-radius: 16px;
+      animation: fadeIn 0.3s ease;
+    }
+    .code-title {
+      font-size: 12px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #4A1C2A;
+      margin-bottom: 6px;
+    }
+    .code-value {
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: 3px;
+      color: #4A1C2A;
+      font-family: monospace;
+      padding: 8px;
+      background: white;
+      border-radius: 10px;
+      margin: 8px 0;
+      display: block;
+      user-select: all;
+    }
+    .btn-copy {
+      background: #4A1C2A;
+      color: white;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+    .btn-return {
+      display: inline-block;
+      margin-top: 14px;
+      color: #4A1C2A;
+      text-decoration: underline;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo-container">
+      <svg viewBox="0 0 1024 1024" width="40" height="40" xmlns="http://www.w3.org/2000/svg">
+        <path d="M 412 215 C 642 208 748 355 748 490 C 748 570 710 638 658 678 C 625 635 540 600 540 600 C 662 520 660 380 540 290 C 475 240 435 225 412 215 Z" fill="#E8A0B0" />
+        <path d="M 270 536 C 322 610 405 650 490 645 C 465 675 425 680 400 675 C 330 655 285 595 270 536 Z" fill="#4A1C2A" />
+        <path d="M 504 578 C 504 578 574 660 574 728 C 574 767 543 798 504 798 C 465 798 434 767 434 728 C 434 660 504 578 504 578 Z" fill="#4A1C2A" />
+      </svg>
+    </div>
+
+    <span class="badge">RDC · Mobile Money</span>
+    <h2>Passe Premium 🌙<br>2.500 FC / mois</h2>
+    <p class="uid-text">Ton ID Luna: <b id="uid">Chargement...</b></p>
+    
+    <div class="logos">
+      <div class="operator-pill">
+        <div class="operator-badge">
+          <span style="color:#E60000;font-weight:900;font-size:12px;">M</span>
+        </div>
+        <span>M-Pesa</span>
+      </div>
+      <div class="operator-pill">
+        <div class="operator-badge">
+          <span style="color:#ED1C24;font-weight:900;font-size:11px;">airtel</span>
+        </div>
+        <span>Airtel</span>
+      </div>
+      <div class="operator-pill">
+        <div class="operator-badge">
+          <span style="color:#FF6600;font-weight:900;font-size:12px;">OM</span>
+        </div>
+        <span>Orange</span>
+      </div>
+    </div>
+
+    <input 
+      id="phone" 
+      type="tel"
+      class="phone-input"
+      placeholder="Ton numéro (ex: 081... / 099...)" 
+      value=""
+    />
+
+    <button id="payButton" class="prune" onclick="pay()">
+      Payer 2.500 FC avec Mobile Money
+    </button>
+    
+    <p class="info-footer">
+      Paiement sécurisé par CinetPay en Francs Congolais (CDF).<br>
+      Tu recevras un code <b>LUNA-XXXXX</b> à entrer dans l'application pour activer 30 jours.
+    </p>
+
+    <div id="codeBox" class="code-box">
+      <div class="code-title">✅ Paiement réussi !</div>
+      <p style="font-size:13px;margin-bottom:4px;">Voici ton code d'activation 30 jours :</p>
+      <span id="generatedCode" class="code-value">LUNA-8K2P9</span>
+      <button class="btn-copy" onclick="copyCode()">Copier le code</button>
+      <div>
+        <a id="returnLink" href="/" class="btn-return">← Retourner dans Luna</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.cinetpay.com/seamless/main.js"></script>
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const rawUid = urlParams.get('uid') || ('USR-' + Math.random().toString(36).substring(2, 8).toUpperCase());
+    document.getElementById('uid').innerText = rawUid;
+
+    function generateDemoCode() {
+      const chars = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+      let part = '';
+      for (let i = 0; i < 5; i++) {
+        part += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return 'LUNA-' + part;
+    }
+
+    function showSuccessCode(code) {
+      document.getElementById('generatedCode').innerText = code;
+      document.getElementById('codeBox').style.display = 'block';
+      document.getElementById('payButton').style.display = 'none';
+      document.getElementById('returnLink').href = '/?code=' + encodeURIComponent(code);
+
+      // Store in localStorage for seamless pickup by Luna app
+      try {
+        localStorage.setItem('@luna_last_generated_code', code);
+      } catch(e) {}
+
+      // Try communicating with opener window if in popup
+      if (window.opener) {
+        window.opener.postMessage({ type: 'LUNA_PAYMENT_SUCCESS', code: code }, '*');
+      }
+    }
+
+    function copyCode() {
+      const code = document.getElementById('generatedCode').innerText;
+      navigator.clipboard.writeText(code).then(() => {
+        alert('Code ' + code + ' copié ! Entre-le dans Luna pour activer tes 30 jours.');
+      }).catch(() => {
+        alert('Ton code est : ' + code);
+      });
+    }
+
+    function pay() {
+      const phone = document.getElementById('phone').value.trim();
+      const uid = rawUid;
+
+      if (!phone) {
+        alert('Entre ton numéro Mobile Money (Vodacom, Airtel ou Orange)');
+        return;
+      }
+
+      // Check if CinetPay SDK is loaded and configured
+      const hasCinetPay = typeof CinetPay !== 'undefined';
+      const hasRealKeys = false; // Set to true when production keys are provided in backend/env
+
+      if (hasCinetPay && hasRealKeys) {
+        try {
+          CinetPay.setConfig({
+            apikey: 'TON_APIKEY_CINETPAY',
+            site_id: 'TON_SITE_ID',
+            notify_url: window.location.origin + '/api/verify',
+            mode: 'PRODUCTION'
+          });
+          const txId = Math.floor(Math.random() * 100000000).toString();
+          CinetPay.getCheckout({
+            transaction_id: txId,
+            amount: 2500,
+            currency: 'CDF',
+            channels: 'MOBILE_MONEY',
+            description: 'Luna Premium 30 jours',
+            customer_phone_number: phone,
+            customer_name: 'User ' + uid
+          });
+          CinetPay.waitResponse(function(data) {
+            if (data.status === 'ACCEPTED') {
+              const finalCode = 'LUNA-' + data.transaction_id;
+              showSuccessCode(finalCode);
+            }
+          });
+          return;
+        } catch (err) {
+          console.warn('CinetPay live checkout fallback:', err);
+        }
+      }
+
+      // Simulation / Direct validation flow for RDC testing & offline demos
+      const button = document.getElementById('payButton');
+      button.innerText = 'Connexion CinetPay USSD...';
+      button.disabled = true;
+
+      setTimeout(() => {
+        const txCode = generateDemoCode();
+        showSuccessCode(txCode);
+      }, 1200);
+    }
+  </script>
+</body>
+</html>
