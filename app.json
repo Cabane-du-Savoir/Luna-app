@@ -8,9 +8,6 @@
     "assetBundlePatterns": [
       "**/*"
     ],
-    "plugins": [
-      "react-native-iap"
-    ],
     "ios": {
       "supportsTabletMode": false,
       "bundleIdentifier": "com.luna.app"

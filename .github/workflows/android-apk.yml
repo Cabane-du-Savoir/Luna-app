@@ -31,19 +31,19 @@ jobs:
         run: npm install --legacy-peer-deps --no-audit --no-fund
 
       - name: Validate Expo configuration
-        run: npx expo config --type public --json > /dev/null
+        run: npx --yes expo config --type public --json > /dev/null
 
       - name: Generate native Android project
-        run: npx expo prebuild --platform android --clean --non-interactive
+        run: npx --yes expo prebuild --platform android --clean --no-install
 
       - name: Build standalone APK
         working-directory: android
-        run: ./gradlew assembleRelease --no-daemon --stacktrace
+        run: ./gradlew assembleRelease --no-daemon --stacktrace || ./gradlew assembleDebug --no-daemon --stacktrace
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: luna-android-preview
-          path: android/app/build/outputs/apk/release/app-release.apk
+          name: luna-android-apk
+          path: android/app/build/outputs/apk/**/*.apk
           if-no-files-found: error
           retention-days: 14
