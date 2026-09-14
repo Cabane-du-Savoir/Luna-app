@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- LUNA V1 OFFICIELLE - BRAND GUIDELINE COLORS -->
+    <!-- Standard Theme Colors -->
+    <color name="colorPrimary">#4A1C2A</color>
+    <color name="colorPrimaryDark">#33121C</color>
+    <color name="colorAccent">#E8A0B0</color>
+
+    <!-- Luna Brand Colors -->
     <color name="ic_launcher_background">#FFE6EA</color>
     <color name="splash_background">#FFF8F9</color>
     <color name="luna_prune">#4A1C2A</color>
