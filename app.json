@@ -10,10 +10,10 @@
     ],
     "ios": {
       "supportsTabletMode": false,
-      "bundleIdentifier": "com.luna.app"
+      "bundleIdentifier": "com.cabanedusavoir.luna"
     },
     "android": {
-      "package": "com.luna.app",
+      "package": "com.cabanedusavoir.luna",
       "versionCode": 1
     },
     "web": {

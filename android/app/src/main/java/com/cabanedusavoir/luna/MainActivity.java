@@ -1,4 +1,4 @@
-package com.luna.app;
+package com.cabanedusavoir.luna;
 
 import com.getcapacitor.BridgeActivity;
 

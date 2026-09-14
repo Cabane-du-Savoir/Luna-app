@@ -164,6 +164,61 @@ export const allTips: DailyTip[] = [
     contenu: "Prépare ton petit sac : 2 serviettes, un mouchoir, eau. C'est aussi le moment de noter dans le Journal comment tu te sens. Si tu as très mal chaque mois au point de ne pas aller à l'école, parles-en à une sage-femme.",
     duree: "2 min",
     isPremium: false
+  },
+  {
+    id: "regles_bouillotte_gingembre",
+    phase: "menstruation",
+    jour_min: 1,
+    jour_max: 3,
+    categorie: "Douleurs",
+    titre: "Bouillotte chaude & gingembre frais",
+    contenu: "Applique une bouillotte tiède sur le bas-ventre ou les lombaires pour détendre les muscles utérins. Bois une infusion de rondelles de gingembre frais infusées 10 min pour réduire naturellement l'inflammation des spasmes.",
+    duree: "3 min",
+    isPremium: false
+  },
+  {
+    id: "regles_pause_minerale",
+    phase: "menstruation",
+    jour_min: 1,
+    jour_max: 2,
+    categorie: "Énergie",
+    titre: "L'hiver hormonal : offre-toi une pause minérale",
+    contenu: "Les premiers jours de règles, tes hormones sont au plus bas. Accorde-toi un bouillon de légumes chaud (carottes, céleri, oignons) pour réchauffer ton ventre et reminéraliser ton corps en douceur.",
+    duree: "2 min",
+    isPremium: false
+  },
+  {
+    id: "luteale_respiration_coherente",
+    phase: "luteale",
+    jour_min: 18,
+    jour_max: 26,
+    categorie: "Bien-être",
+    titre: "Calmer le cortisol en 5 minutes",
+    contenu: "Le stress perturbe la progestérone. Pratique la respiration 5/5 : inspire 5 secondes par le nez, expire 5 secondes par la bouche pendant 5 minutes. Ton système nerveux s'apaise immédiatement.",
+    duree: "5 min",
+    isPremium: false
+  },
+  {
+    id: "luteale_posture_enfant",
+    phase: "luteale",
+    jour_min: 20,
+    jour_max: 28,
+    categorie: "Posture",
+    titre: "Déverrouiller le bas du dos (Balasana)",
+    contenu: "Si le bas de ton dos tire, agenouille-toi, écarte les genoux, assieds-toi sur tes talons et étire tes bras loin devant au sol. Respire profondément 2 minutes dans tes lombaires pour relâcher la pression pelvienne.",
+    duree: "2 min",
+    isPremium: false
+  },
+  {
+    id: "folliculaire_eau_citronnee",
+    phase: "folliculaire",
+    jour_min: 6,
+    jour_max: 12,
+    categorie: "Beauté & Peau",
+    titre: "Un grand verre d'eau citronnée au réveil",
+    contenu: "Bois un verre d'eau tiède avec un filet de citron le matin à jeun. Cela stimule le foie, qui aide à éliminer les résidus hormonaux et prévient les éruptions cutanées de la seconde moitié de cycle.",
+    duree: "1 min",
+    isPremium: false
   }
 ];
 

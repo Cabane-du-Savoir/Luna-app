@@ -1,10 +1,10 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace = "com.luna.app"
+    namespace = "com.cabanedusavoir.luna"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.luna.app"
+        applicationId "com.cabanedusavoir.luna"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
@@ -16,10 +16,28 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        release {
+            if (System.getenv("KEYSTORE_PATH") && file(System.getenv("KEYSTORE_PATH")).exists()) {
+                storeFile file(System.getenv("KEYSTORE_PATH"))
+                storePassword System.getenv("KEYSTORE_PASSWORD") ?: "lunaapp123"
+                keyAlias System.getenv("KEY_ALIAS") ?: "luna"
+                keyPassword System.getenv("KEY_PASSWORD") ?: (System.getenv("KEYSTORE_PASSWORD") ?: "lunaapp123")
+            } else if (file('upload-keystore.jks').exists()) {
+                storeFile file('upload-keystore.jks')
+                storePassword System.getenv("KEYSTORE_PASSWORD") ?: "lunaapp123"
+                keyAlias System.getenv("KEY_ALIAS") ?: "luna"
+                keyPassword System.getenv("KEY_PASSWORD") ?: (System.getenv("KEYSTORE_PASSWORD") ?: "lunaapp123")
+            }
+        }
+    }
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            if (signingConfigs.release.storeFile != null) {
+                signingConfig signingConfigs.release
+            }
         }
     }
 }

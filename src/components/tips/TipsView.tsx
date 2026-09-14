@@ -55,11 +55,14 @@ export const TipsView: React.FC = () => {
   // LUNA V1.1 Categories Filter Chips
   const filterChips: { id: string; label: string; isBonus?: boolean }[] = [
     { id: 'ALL', label: 'Tous' },
+    { id: 'CYCLE', label: 'Cycle' },
+    { id: 'DOULEURS', label: 'Douleurs' },
     { id: 'TOILETTE', label: 'Toilette' },
     { id: 'ODEURS', label: 'Odeurs' },
     { id: 'RASAGE', label: 'Rasage' },
     { id: 'DEMANGEAISONS', label: 'Démangeaisons' },
-    { id: 'DOULEURS', label: 'Douleurs' },
+    { id: 'ALIMENTATION', label: 'Alimentation' },
+    { id: 'BIEN-ÊTRE', label: 'Bien-être' },
     { id: 'RECETTES', label: 'Recettes', isBonus: true },
     { id: 'THEMES', label: 'Thèmes', isBonus: true },
   ];
@@ -70,12 +73,12 @@ export const TipsView: React.FC = () => {
       : articlesData.filter(a => a.topic === selectedTopic);
 
   const isArticleLocked = (article: Article): boolean => {
-    // Health categories are ALWAYS free per LUNA V1.1 business rule
-    if (HEALTH_FREE_CATEGORIES.includes(article.topic as string)) {
+    // Si l'utilisatrice a débloqué le pass, tout est accessible
+    if (paid) {
       return false;
     }
-    // Only locked if flagged as locked and user has not unlocked lifetime
-    return Boolean(article.isLocked && !paid);
+    // Les 8 astuces basiques sont 100% gratuites (free: true, isLocked: false)
+    return Boolean(!article.free || article.isLocked);
   };
 
   const handleOpenArticle = (article: Article) => {
@@ -152,6 +155,7 @@ export const TipsView: React.FC = () => {
             src={selectedArticle.image}
             alt={selectedArticle.title}
             className="w-full h-full object-cover"
+            referrerPolicy="no-referrer"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#4a2135]/80 via-transparent to-transparent flex items-end p-6">
             <span className="text-xs font-bold uppercase tracking-wider text-white bg-[#6A2C40]/80 backdrop-blur-xs px-3 py-1 rounded-full">
@@ -302,17 +306,17 @@ export const TipsView: React.FC = () => {
       </div>
 
       {/* Health free badge reminder */}
-      <div className="p-3 rounded-2xl bg-[#fffdfc] border border-[#f6e7e4] flex items-center justify-between text-xs text-[#4a2135]/75">
+      <div className="p-3.5 rounded-2xl bg-[#fffdfc] border border-[#f6e7e4] flex flex-wrap items-center justify-between gap-2 text-xs text-[#4a2135]/80">
         <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-emerald-500" />
-          <span>Tous les guides de santé essentiels sont <strong>100% gratuits</strong>.</span>
+          <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" />
+          <span><strong>8 astuces basiques 100% gratuites</strong> sans cadenas pour ton bien-être quotidien.</span>
         </div>
         {!paid && (
           <button
             onClick={() => setPaywallOpen(true)}
-            className="text-[#6A2C40] font-semibold hover:underline"
+            className="text-[#6A2C40] font-bold hover:underline shrink-0"
           >
-            Soutenir Luna (5$)
+            Débloquer les 13 guides avancés (5$)
           </button>
         )}
       </div>
@@ -334,6 +338,7 @@ export const TipsView: React.FC = () => {
                   src={article.image}
                   alt={article.title}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  referrerPolicy="no-referrer"
                 />
 
                 {/* Badge Topic */}

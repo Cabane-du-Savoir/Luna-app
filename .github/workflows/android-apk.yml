@@ -1,4 +1,4 @@
-name: Build Android APK
+name: Build Android Bundle (AAB) & APK
 
 on:
   workflow_dispatch:
@@ -8,22 +8,23 @@ on:
       - master
 
 jobs:
-  build-apk:
+  build-android:
+    name: Build AAB & APK
     runs-on: ubuntu-latest
     permissions:
       contents: read
 
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Java
+      - name: Setup Java JDK 21
         uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '21'
 
-      - name: Setup Node.js
+      - name: Setup Node.js 22
         uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -31,23 +32,75 @@ jobs:
       - name: Install dependencies
         run: npm install --legacy-peer-deps --no-audit --no-fund
 
-      - name: Build Web App
+      - name: Build Web Application
         run: npm run build
 
-      - name: Sync Capacitor Android
+      - name: Sync Capacitor Android Project
         run: npx cap sync android
+
+      - name: Setup Release Keystore
+        id: setup-keystore
+        run: |
+          if [ -n "${{ secrets.KEYSTORE_BASE64 }}" ]; then
+            echo "Using keystore provided in GitHub Secrets..."
+            echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/upload-keystore.jks
+            echo "KEYSTORE_PASSWORD=${{ secrets.KEYSTORE_PASSWORD || 'lunaapp123' }}" >> $GITHUB_ENV
+            echo "KEY_ALIAS=${{ secrets.KEY_ALIAS || 'luna' }}" >> $GITHUB_ENV
+            echo "KEY_PASSWORD=${{ secrets.KEY_PASSWORD || 'lunaapp123' }}" >> $GITHUB_ENV
+          else
+            echo "Generating automated release signing keystore..."
+            keytool -genkeypair -v \
+              -keystore android/app/upload-keystore.jks \
+              -alias luna \
+              -keyalg RSA \
+              -keysize 2048 \
+              -validity 10000 \
+              -storepass lunaapp123 \
+              -keypass lunaapp123 \
+              -dname "CN=Luna, OU=Mobile, O=CabaneDuSavoir, C=CD"
+            
+            echo "KEYSTORE_PASSWORD=lunaapp123" >> $GITHUB_ENV
+            echo "KEY_ALIAS=luna" >> $GITHUB_ENV
+            echo "KEY_PASSWORD=lunaapp123" >> $GITHUB_ENV
+
+            echo "=== INFORMATIONS DU KEYSTORE LUNA ===" > android/app/keystore_credentials.txt
+            echo "Alias: luna" >> android/app/keystore_credentials.txt
+            echo "Mot de passe Keystore: lunaapp123" >> android/app/keystore_credentials.txt
+            echo "Mot de passe Cle: lunaapp123" >> android/app/keystore_credentials.txt
+            echo "Validite: 10000 jours" >> android/app/keystore_credentials.txt
+          fi
 
       - name: Grant execute permission for gradlew
         run: chmod +x android/gradlew
 
-      - name: Build standalone APK
+      - name: Build Android App Bundle (.AAB for Google Play Store)
         working-directory: android
-        run: ./gradlew assembleDebug --no-daemon --stacktrace
+        env:
+          KEYSTORE_PATH: "upload-keystore.jks"
+        run: ./gradlew bundleRelease --no-daemon --stacktrace
 
-      - name: Upload APK
+      - name: Build Android APK (for direct testing)
+        working-directory: android
+        env:
+          KEYSTORE_PATH: "upload-keystore.jks"
+        run: ./gradlew assembleRelease --no-daemon --stacktrace
+
+      - name: Upload Google Play Bundle (.aab) & Keystore
         uses: actions/upload-artifact@v4
         with:
-          name: luna-android-apk
-          path: android/app/build/outputs/apk/debug/*.apk
+          name: luna-google-play-bundle-aab
+          path: |
+            android/app/build/outputs/bundle/release/*.aab
+            android/app/upload-keystore.jks
+            android/app/keystore_credentials.txt
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload Testable APK (.apk)
+        uses: actions/upload-artifact@v4
+        with:
+          name: luna-release-apk
+          path: android/app/build/outputs/apk/release/*.apk
           if-no-files-found: error
           retention-days: 14
+
