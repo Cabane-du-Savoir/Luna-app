@@ -8,7 +8,8 @@ import {
   Plus,
   Droplets,
   AlertCircle,
-  Lightbulb
+  Lightbulb,
+  Bell
 } from 'lucide-react';
 import { useDataStore } from '../../store/dataStore';
 import { useAuthStore } from '../../store/authStore';
@@ -18,6 +19,12 @@ import {
   getCurrentPhase,
   formatDate,
 } from '../../utils/cycleCalculations';
+import {
+  getPhase,
+  getTipForToday,
+  shouldNotifyPrePeriod,
+  getPhaseLabel,
+} from '../../constants/tips';
 import { CycleCourseModal } from './CycleCourseModal';
 import { LogModal } from '../common/LogModal';
 
@@ -63,11 +70,13 @@ export const CycleView: React.FC<CycleViewProps> = ({ onOpenTips }) => {
     e => e.date.startsWith(currentMonthKey)
   ).length;
 
-  // Personalized tip from original codebase
-  const personalizedTip =
-    cycleLength === 28
-      ? 'Avec un cycle habituel de 28 jours, observe tes ressentis autour du milieu de cycle et prépare tes protections quelques jours avant la date estimée.'
-      : `Pour ton cycle de ${cycleLength} jours, Luna affine ses estimations au fil de tes enregistrements. Note tes symptômes pour mieux reconnaître tes repères.`;
+  // Dynamic Phase & Tip calculation per LUNA V1.1 specifications
+  const lastPeriodDate = new Date(effectiveSettings.lastPeriodStart);
+  const dynamicPhase = getPhase(lastPeriodDate, cycleLength, today);
+  const dynamicTip = getTipForToday(dynamicPhase, today);
+  const isPrePeriodNotice = prediction.nextPeriodDate
+    ? shouldNotifyPrePeriod(new Date(prediction.nextPeriodDate), today)
+    : false;
 
   // Quick action: Set period started today
   const handlePeriodStartToday = () => {
@@ -199,6 +208,23 @@ export const CycleView: React.FC<CycleViewProps> = ({ onOpenTips }) => {
           <span className="sm:hidden">Guide</span>
         </button>
       </div>
+
+      {/* Pre-period Notification J-3 */}
+      {isPrePeriodNotice && (
+        <div className="p-4 sm:p-5 rounded-3xl bg-[#fdeeeb] border-2 border-[#6A2C40] flex items-start gap-3.5 shadow-sm animate-pulse">
+          <div className="p-2.5 rounded-2xl bg-[#6A2C40] text-white shrink-0 mt-0.5 shadow-xs">
+            <Bell size={18} />
+          </div>
+          <div className="space-y-1">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-[#6A2C40] block">
+              Rappel J-3 · Préparation
+            </span>
+            <p className="text-xs sm:text-sm text-[#4a2135] font-semibold leading-relaxed">
+              Tes règles arrivent dans 3 jours. Prépare ton petit sac : 2 serviettes, un mouchoir, de l’eau.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Hero Prediction Card */}
       <div className="relative overflow-hidden rounded-3xl p-6 sm:p-8 bg-gradient-to-br from-[#f8e4e2] via-[#f1d6da] to-[#fdeeeb] border border-[#f1d6da] shadow-md shadow-[#6A2C40]/5">
@@ -486,18 +512,26 @@ export const CycleView: React.FC<CycleViewProps> = ({ onOpenTips }) => {
         </div>
       </div>
 
-      {/* Bottom Section: [Conseil du jour] */}
-      <div className="p-5 rounded-3xl bg-[#fdeeeb] border border-[#f1d6da] flex items-start justify-between gap-4">
-        <div className="flex items-start gap-3">
+      {/* Bottom Section: [Conseil du jour - Dynamic from assets/tips.json] */}
+      <div className="p-5 sm:p-6 rounded-3xl bg-[#fdeeeb] border border-[#f1d6da] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xs">
+        <div className="flex items-start gap-3.5">
           <div className="p-2.5 rounded-2xl bg-white text-[#6A2C40] shrink-0 mt-0.5 shadow-xs">
             <Lightbulb size={20} />
           </div>
-          <div>
-            <span className="text-[11px] font-bold text-[#6A2C40] uppercase tracking-wider block mb-0.5">
-              Conseil du jour
-            </span>
-            <p className="text-xs sm:text-sm text-[#4a2135]/85 leading-relaxed">
-              {personalizedTip}
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-bold text-[#6A2C40] uppercase tracking-wider bg-white/70 px-2.5 py-0.5 rounded-full border border-[#f1d6da]">
+                {getPhaseLabel(dynamicPhase)}
+              </span>
+              <span className="text-[11px] text-[#4a2135]/60 font-medium">
+                {dynamicTip.categorie} · {dynamicTip.duree}
+              </span>
+            </div>
+            <h3 className="font-serif text-sm sm:text-base font-bold text-[#4a2135]">
+              {dynamicTip.titre}
+            </h3>
+            <p className="text-xs sm:text-sm text-[#4a2135]/80 leading-relaxed max-w-xl">
+              {dynamicTip.contenu}
             </p>
           </div>
         </div>
@@ -505,9 +539,9 @@ export const CycleView: React.FC<CycleViewProps> = ({ onOpenTips }) => {
         {onOpenTips && (
           <button
             onClick={onOpenTips}
-            className="self-center shrink-0 px-3.5 py-2 rounded-xl bg-white border border-[#f1d6da] text-[#6A2C40] hover:bg-[#6A2C40] hover:text-white text-xs font-semibold transition-colors"
+            className="self-end sm:self-center shrink-0 px-4 py-2.5 rounded-2xl bg-white border border-[#f1d6da] text-[#6A2C40] hover:bg-[#6A2C40] hover:text-white text-xs font-semibold shadow-xs transition-colors"
           >
-            Lire les guides
+            Tous les conseils →
           </button>
         )}
       </div>

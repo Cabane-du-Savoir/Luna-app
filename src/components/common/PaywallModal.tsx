@@ -1,112 +1,280 @@
-import React from 'react';
-import { X, Check, Sparkles, Shield, HeartHandshake, BookOpen } from 'lucide-react';
+import React, { useState } from 'react';
+import {
+  X,
+  CreditCard,
+  Sparkles,
+  Shield,
+  FileDown,
+  EyeOff,
+  Palette,
+  Clock,
+  KeyRound,
+  Check,
+  ExternalLink,
+} from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
+import { MobileMoneyModal } from './MobileMoneyModal';
 
 interface PaywallModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
+/**
+ * LUNA PREMIUM - ÉCRAN OFFICIEL 2.500 FC / MOIS
+ * Couleurs Luna :
+ * - prune : #4A1C2A
+ * - blush : #FFF8F9
+ * - blushCard : #FDE8E9
+ *
+ * Bouton 1 : [Bouton prune] S'abonner avec Carte Visa via Google Play
+ * Bouton 2 : [Bouton blanc avec logos] Payer par Mobile Money (M-Pesa / Airtel / Orange)
+ * Lien : "Tu as déjà un code ? Entrer mon code Mobile Money"
+ */
 export const PaywallModal: React.FC<PaywallModalProps> = ({ isOpen, onClose }) => {
-  const { paid, setPaid } = useAuthStore();
+  const {
+    paid,
+    premiumExpiresAt,
+    activateGooglePlaySubscription,
+    getRemainingPremiumDays,
+    user,
+  } = useAuthStore();
+
+  const [codeModalOpen, setCodeModalOpen] = useState(false);
+  const [googlePlaySuccess, setGooglePlaySuccess] = useState(false);
 
   if (!isOpen) return null;
 
-  const handleUnlock = () => {
-    setPaid(true);
-    onClose();
+  const remainingDays = getRemainingPremiumDays();
+
+  const handleGooglePlay = () => {
+    activateGooglePlaySubscription();
+    setGooglePlaySuccess(true);
+    setTimeout(() => {
+      setGooglePlaySuccess(false);
+      onClose();
+    }, 1500);
+  };
+
+  const handleMobileMoney = () => {
+    const uid = user?.prenom ? `${user.prenom}-${Date.now().toString(36).slice(-4)}` : 'luna-user';
+    window.open(`/pay.html?uid=${encodeURIComponent(uid)}`, '_blank');
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#4a2135]/40 backdrop-blur-sm animate-fade-in">
-      <div className="bg-[#fffaf8] border border-[#f6e7e4] rounded-3xl max-w-md w-full p-6 shadow-2xl relative overflow-hidden">
-        {/* Subtle decorative glow */}
-        <div className="absolute top-0 right-0 w-48 h-48 bg-[#f1d6da]/40 rounded-full blur-3xl -z-10 pointer-events-none" />
-
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 p-2 text-[#4a2135]/60 hover:text-[#4a2135] rounded-full hover:bg-[#fdeeeb] transition-colors"
-          aria-label="Fermer"
-        >
-          <X size={20} />
-        </button>
-
-        <div className="text-center pt-2 pb-4">
-          <div className="w-14 h-14 mx-auto mb-3 rounded-2xl bg-gradient-to-tr from-[#a8506b] to-[#7a2d4f] text-[#fdf3f0] flex items-center justify-center shadow-lg shadow-[#7a2d4f]/20">
-            <Sparkles size={28} />
-          </div>
-          <span className="text-xs uppercase tracking-wider font-semibold text-[#7a2d4f] bg-[#fdeeeb] px-3 py-1 rounded-full border border-[#f1d6da]">
-            Accès Illimité Luna
-          </span>
-          <h3 className="text-2xl font-serif text-[#4a2135] mt-2 mb-1">
-            Prends soin de toi, sans limites
-          </h3>
-          <p className="text-sm text-[#4a2135]/70">
-            Un achat unique pour débloquer l’ensemble des guides, articles et analyses de cycle.
-          </p>
-        </div>
-
-        <div className="space-y-3 mb-6">
-          <div className="flex items-start gap-3 p-3 rounded-xl bg-[#fffdfc] border border-[#f6e7e4]">
-            <div className="p-1 rounded-full bg-[#fdeeeb] text-[#7a2d4f] mt-0.5">
-              <BookOpen size={16} />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-[#4a2135]">Tous les articles & guides intimes</p>
-              <p className="text-xs text-[#4a2135]/60">Rasage, démangeaisons, exercices pour soulager les crampes...</p>
-            </div>
-          </div>
-
-          <div className="flex items-start gap-3 p-3 rounded-xl bg-[#fffdfc] border border-[#f6e7e4]">
-            <div className="p-1 rounded-full bg-[#fdeeeb] text-[#7a2d4f] mt-0.5">
-              <Sparkles size={16} />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-[#4a2135]">Estimations de cycle personnalisées</p>
-              <p className="text-xs text-[#4a2135]/60">Suivi précis des phases et alertes pré-menstruelles intelligentes.</p>
-            </div>
-          </div>
-
-          <div className="flex items-start gap-3 p-3 rounded-xl bg-[#fffdfc] border border-[#f6e7e4]">
-            <div className="p-1 rounded-full bg-[#fdeeeb] text-[#7a2d4f] mt-0.5">
-              <Shield size={16} />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-[#4a2135]">Confidentialité absolue</p>
-              <p className="text-xs text-[#4a2135]/60">100% sans publicité, zéro revente de données intimes.</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="space-y-3">
-          <button
-            onClick={handleUnlock}
-            className="w-full py-3.5 px-4 rounded-2xl bg-[#7a2d4f] hover:bg-[#8f3a5d] text-[#fdf3f0] font-medium text-base shadow-lg shadow-[#7a2d4f]/25 transition-all transform active:scale-[0.98] flex items-center justify-center gap-2"
-          >
-            {paid ? (
-              <>
-                <Check size={18} />
-                Accès Débloqué ✓
-              </>
-            ) : (
-              <>
-                <span>Obtenir l’accès à vie · 5,00 $</span>
-              </>
-            )}
-          </button>
-
+    <>
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-[#4A1C2A]/45 backdrop-blur-xs animate-fade-in overflow-y-auto">
+        <div className="bg-[#FFF8F9] border border-[#FDE8E9] rounded-3xl max-w-lg w-full p-5 sm:p-7 shadow-2xl relative overflow-hidden my-auto">
+          {/* Close button */}
           <button
             onClick={onClose}
-            className="w-full py-2 text-xs text-center text-[#4a2135]/60 hover:text-[#4a2135] transition-colors"
+            className="absolute top-4 right-4 p-2 text-[#4A1C2A]/60 hover:text-[#4A1C2A] rounded-full hover:bg-[#FDE8E9] transition-colors"
+            aria-label="Fermer"
           >
-            Peut-être plus tard
+            <X size={20} />
           </button>
-        </div>
 
-        <p className="text-[11px] text-center text-[#4a2135]/45 mt-4">
-          Paiement sécurisé et unique. Pas d'abonnement récurrent.
-        </p>
+          {/* En-tête de l'offre */}
+          <div className="text-center pt-1 pb-3">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FDE8E9] border border-[#E8A0B0] text-[#4A1C2A] text-xs font-bold uppercase tracking-wider mb-2">
+              <Sparkles size={13} />
+              <span>Luna Premium</span>
+            </div>
+
+            <h2 className="text-2xl sm:text-3xl font-serif font-bold text-[#4A1C2A] tracking-tight">
+              2.500 FC <span className="text-base font-sans font-normal text-[#4A1C2A]/70">/ mois</span>
+            </h2>
+            <p className="text-xs sm:text-sm text-[#4A1C2A]/75 mt-1 max-w-xs mx-auto">
+              (soit environ 0,89 $ USD) · Sans engagement, renouvelable au mois.
+            </p>
+          </div>
+
+          {/* Statut si déjà actif */}
+          {paid && (
+            <div className="mb-4 p-3 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Check size={16} className="text-emerald-700" />
+                <span className="font-semibold">
+                  Abonnement actif ({remainingDays} jours restants)
+                </span>
+              </div>
+              {premiumExpiresAt && (
+                <span className="text-[10px] text-emerald-700 font-medium">
+                  jusqu'au {new Date(premiumExpiresAt).toLocaleDateString('fr-FR')}
+                </span>
+              )}
+            </div>
+          )}
+
+          {/* Liste des fonctionnalités Premium */}
+          <div className="space-y-2 mb-5">
+            <div className="p-3 rounded-2xl bg-[#FFFFFF] border border-[#FDE8E9] flex items-start gap-3">
+              <div className="p-2 rounded-xl bg-[#FDE8E9] text-[#4A1C2A] shrink-0 mt-0.5">
+                <Sparkles size={16} />
+              </div>
+              <div>
+                <p className="text-xs sm:text-sm font-bold text-[#4A1C2A]">
+                  Prédictions IA pour cycles irréguliers
+                </p>
+                <p className="text-[11px] text-[#4A1C2A]/70">
+                  Algorithme adaptatif avec marge de tolérance intelligente.
+                </p>
+              </div>
+            </div>
+
+            <div className="p-3 rounded-2xl bg-[#FFFFFF] border border-[#FDE8E9] flex items-start gap-3">
+              <div className="p-2 rounded-xl bg-[#FDE8E9] text-[#4A1C2A] shrink-0 mt-0.5">
+                <Clock size={16} />
+              </div>
+              <div>
+                <p className="text-xs sm:text-sm font-bold text-[#4A1C2A]">
+                  Historique complet & illimité
+                </p>
+                <p className="text-[11px] text-[#4A1C2A]/70">
+                  Visualise tous tes cycles passés sans aucune limite de temps.
+                </p>
+              </div>
+            </div>
+
+            <div className="p-3 rounded-2xl bg-[#FFFFFF] border border-[#FDE8E9] flex items-start gap-3">
+              <div className="p-2 rounded-xl bg-[#FDE8E9] text-[#4A1C2A] shrink-0 mt-0.5">
+                <EyeOff size={16} />
+              </div>
+              <div>
+                <p className="text-xs sm:text-sm font-bold text-[#4A1C2A]">
+                  Mode icône discrète
+                </p>
+                <p className="text-[11px] text-[#4A1C2A]/70">
+                  Masque l'icône de l'application sur ton écran pour préserver ton intimité.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <div className="p-2.5 rounded-2xl bg-[#FFFFFF] border border-[#FDE8E9] flex items-center gap-2">
+                <FileDown size={15} className="text-[#4A1C2A] shrink-0" />
+                <span className="text-[11px] font-bold text-[#4A1C2A]">Export PDF médecin</span>
+              </div>
+              <div className="p-2.5 rounded-2xl bg-[#FFFFFF] border border-[#FDE8E9] flex items-center gap-2">
+                <Palette size={15} className="text-[#4A1C2A] shrink-0" />
+                <span className="text-[11px] font-bold text-[#4A1C2A]">Thèmes exclusifs</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Rappel : Gratuit à vie */}
+          <div className="mb-5 p-2.5 rounded-xl bg-[#FFE6EA]/50 border border-[#E8A0B0]/40 text-center">
+            <p className="text-[11px] text-[#4A1C2A]/85">
+              💡 <b>Gratuit à vie :</b> Calendrier, journal intime, les 14 guides de phase et 3 notifications clés (J-3, J1, J14).
+            </p>
+          </div>
+
+          {/* LES 2 BOUTONS OFFICIELS */}
+          <div className="space-y-3">
+            {/* BOUTON 1 - GOOGLE PLAY (Prune #4A1C2A) */}
+            <button
+              onClick={handleGooglePlay}
+              className="w-full min-h-[64px] py-3 px-5 rounded-2xl bg-[#4A1C2A] hover:bg-[#5d2435] text-white font-semibold text-sm shadow-md shadow-[#4A1C2A]/20 transition-all active:scale-[0.98] flex items-center justify-between gap-3 cursor-pointer"
+            >
+              <div className="flex items-center gap-3 text-left">
+                <div className="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
+                  <CreditCard size={22} className="text-white" />
+                </div>
+                <div>
+                  <div className="font-bold text-sm leading-snug">
+                    S'abonner avec Carte Visa
+                  </div>
+                  <div className="text-[11px] text-white/80 font-normal">
+                    via Google Play (2.500 FC / mois)
+                  </div>
+                </div>
+              </div>
+              {googlePlaySuccess ? (
+                <span className="text-xs bg-white text-[#4A1C2A] px-2.5 py-1 rounded-lg font-bold flex items-center gap-1 shrink-0">
+                  <Check size={14} /> Activé
+                </span>
+              ) : (
+                <span className="text-xs bg-white/20 px-2 py-1 rounded-lg shrink-0 font-mono">
+                  ~0,89 $
+                </span>
+              )}
+            </button>
+
+            {/* BOUTON 2 - MOBILE MONEY (Blanc avec bordure #4A1C2A et logos M-Pesa, Airtel, Orange) */}
+            <button
+              onClick={handleMobileMoney}
+              className="w-full min-h-[64px] py-3 px-5 rounded-2xl bg-white border-2 border-[#4A1C2A] hover:bg-[#FFF8F9] text-[#4A1C2A] font-semibold text-sm shadow-xs transition-all active:scale-[0.98] flex items-center justify-between gap-3 cursor-pointer"
+            >
+              <div className="flex items-center gap-3 text-left">
+                {/* 3 petits cercles avec logos M-Pesa, Airtel, Orange */}
+                <div className="flex -space-x-2 shrink-0">
+                  <div
+                    className="w-8 h-8 rounded-full bg-[#E60000] text-white flex items-center justify-center text-[10px] font-black border-2 border-white shadow-xs"
+                    title="Vodacom M-Pesa"
+                  >
+                    M
+                  </div>
+                  <div
+                    className="w-8 h-8 rounded-full bg-[#ED1C24] text-white flex items-center justify-center text-[9px] font-black border-2 border-white shadow-xs"
+                    title="Airtel Money"
+                  >
+                    air
+                  </div>
+                  <div
+                    className="w-8 h-8 rounded-full bg-[#FF6600] text-white flex items-center justify-center text-[9px] font-black border-2 border-white shadow-xs"
+                    title="Orange Money"
+                  >
+                    OM
+                  </div>
+                </div>
+
+                <div>
+                  <div className="font-bold text-sm leading-snug text-[#4A1C2A]">
+                    Payer par Mobile Money
+                  </div>
+                  <div className="text-[11px] text-[#4A1C2A]/70 font-normal">
+                    M-Pesa · Airtel · Orange (CinetPay RDC)
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-1 text-xs text-[#4A1C2A] font-bold shrink-0">
+                <span>2.500 FC</span>
+                <ExternalLink size={14} />
+              </div>
+            </button>
+          </div>
+
+          {/* Entrer mon code Mobile Money */}
+          <div className="mt-4 pt-3 border-t border-[#FDE8E9] flex flex-col sm:flex-row items-center justify-between gap-2 text-center">
+            <button
+              type="button"
+              onClick={() => setCodeModalOpen(true)}
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-[#4A1C2A] hover:underline cursor-pointer py-1"
+            >
+              <KeyRound size={14} />
+              <span>Tu as déjà un code ? Entrer mon code Mobile Money</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={onClose}
+              className="text-xs text-[#4A1C2A]/50 hover:text-[#4A1C2A] transition-colors py-1 cursor-pointer"
+            >
+              Continuer en gratuit
+            </button>
+          </div>
+        </div>
       </div>
-    </div>
+
+      {/* Code validation modal */}
+      <MobileMoneyModal
+        isOpen={codeModalOpen}
+        onClose={() => setCodeModalOpen(false)}
+        onOpenPaymentWeb={handleMobileMoney}
+      />
+    </>
   );
 };
+
+export default PaywallModal;

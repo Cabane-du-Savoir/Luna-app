@@ -13,6 +13,9 @@ import { useAuthStore } from '../../store/authStore';
 import { useDataStore } from '../../store/dataStore';
 import { ContraceptionType } from '../../types/data';
 import { predictNextPeriodDetailed } from '../../utils/cycleCalculations';
+import { LunaLogo } from '../common/LunaLogo';
+import { LunaPermissionModal } from '../common/LunaPermissionModal';
+import { requestLunaNotificationPermission, scheduleCycleReminders } from '../../services/reminders';
 
 interface OnboardingViewProps {
   onComplete: () => void;
@@ -21,6 +24,7 @@ interface OnboardingViewProps {
 export const OnboardingView: React.FC<OnboardingViewProps> = ({ onComplete }) => {
   // Steps S1 to S9 (represented as indices 0 to 8)
   const [currentStep, setCurrentStep] = useState<number>(0);
+  const [showPermissionSheet, setShowPermissionSheet] = useState<boolean>(false);
 
   // S2 Privacy Checkbox
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
@@ -83,6 +87,27 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ onComplete }) =>
     isLearningMode,
   };
   const prediction = predictNextPeriodDetailed(previewSettings, [], isLearningMode);
+
+  // Handlers for Luna Permission Sheet (S8 -> S9 transition)
+  const handleAcceptPermission = async () => {
+    setShowPermissionSheet(false);
+    try {
+      await requestLunaNotificationPermission();
+      await scheduleCycleReminders(
+        new Date(previewSettings.lastPeriodStart),
+        previewSettings.cycleLength,
+        true
+      );
+    } catch (e) {
+      console.warn('Error requesting permission', e);
+    }
+    setCurrentStep(8);
+  };
+
+  const handleDismissPermission = () => {
+    setShowPermissionSheet(false);
+    setCurrentStep(8);
+  };
 
   // Finalize & Save
   const handleSaveAndExit = (withAccount: boolean) => {
@@ -159,9 +184,7 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ onComplete }) =>
         {/* S1 - Welcome */}
         {currentStep === 0 && (
           <div className="text-center space-y-6 animate-fade-in">
-            <div className="w-20 h-20 mx-auto rounded-3xl bg-gradient-to-tr from-[#6A2C40] to-[#a8506b] text-[#fdf3f0] flex items-center justify-center font-serif text-3xl font-bold shadow-lg shadow-[#6A2C40]/25">
-              ☾
-            </div>
+            <LunaLogo size={88} shape="circle" className="mx-auto select-none" />
             <div>
               <span className="text-xs uppercase font-bold tracking-widest text-[#6A2C40] bg-[#fdeeeb] px-3.5 py-1 rounded-full border border-[#f1d6da]">
                 Luna V1.1
@@ -609,8 +632,8 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ onComplete }) =>
             )}
 
             <button
-              onClick={() => setCurrentStep(8)}
-              className="w-full py-4 px-6 rounded-2xl bg-[#6A2C40] hover:bg-[#7d354c] text-[#fdf3f0] font-semibold text-base shadow-md shadow-[#6A2C40]/25 transition-all flex items-center justify-center gap-2"
+              onClick={() => setShowPermissionSheet(true)}
+              className="w-full py-4 px-6 rounded-2xl bg-[#4A1C2A] hover:bg-[#5d2435] text-[#fdf3f0] font-semibold text-base shadow-md shadow-[#4A1C2A]/25 transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
               <span>Voir mon calendrier</span>
               <ArrowRight size={18} />
@@ -688,6 +711,12 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ onComplete }) =>
           </div>
         )}
       </div>
+
+      <LunaPermissionModal
+        isOpen={showPermissionSheet}
+        onAccept={handleAcceptPermission}
+        onDismiss={handleDismissPermission}
+      />
     </div>
   );
 };

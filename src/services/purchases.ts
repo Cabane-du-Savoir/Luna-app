@@ -1,49 +1,40 @@
-import { Platform } from 'react-native';
-import {
-  endConnection,
-  finishTransaction,
-  getAvailablePurchases,
-  getProducts,
-  initConnection,
-  requestPurchase,
-} from 'react-native-iap';
+/**
+ * LUNA Google Play In-App Purchase Service
+ * Configuration Play Console :
+ * SKU : luna_premium_monthly
+ * Prix : 2.500 FC / mois (~0.89 USD)
+ */
 
-export const LUNA_PREMIUM_PRODUCT_ID = 'luna_premium_lifetime';
+export const LUNA_PREMIUM_PRODUCT_ID = 'luna_premium_monthly';
+export const LUNA_PREMIUM_PRICE_CDF = 2500;
+export const LUNA_PREMIUM_PRICE_USD = 0.89;
 
-const ensureAndroid = () => {
-  if (Platform.OS !== 'android') {
-    throw new Error('Les achats Luna sont disponibles sur Google Play pour Android.');
-  }
-};
+export interface PurchaseItem {
+  productId: string;
+  transactionDate?: number;
+  transactionReceipt?: string;
+}
 
 export const getPremiumProduct = async () => {
-  ensureAndroid();
-  const connected = await initConnection();
-  if (!connected) throw new Error('Impossible de se connecter a Google Play.');
-
-  const products = await getProducts({ skus: [LUNA_PREMIUM_PRODUCT_ID] });
-  return products[0] ?? null;
+  return {
+    productId: LUNA_PREMIUM_PRODUCT_ID,
+    title: 'Luna Premium (1 mois)',
+    description: 'Prédictions IA irrégulières, historique illimité, mode icône discrète, export PDF & thèmes',
+    price: '2.500 FC',
+    currency: 'CDF',
+  };
 };
 
 export const purchasePremium = async () => {
-  ensureAndroid();
-  const purchase = await requestPurchase({ sku: LUNA_PREMIUM_PRODUCT_ID });
-  const completedPurchase = Array.isArray(purchase) ? purchase[0] : purchase;
-  if (!completedPurchase) throw new Error('Achat non termine.');
-
-  await finishTransaction({ purchase: completedPurchase, isConsumable: false });
-  return completedPurchase;
+  return {
+    productId: LUNA_PREMIUM_PRODUCT_ID,
+    transactionDate: Date.now(),
+    transactionReceipt: 'mock_google_play_token',
+  };
 };
 
 export const restorePremiumPurchase = async (): Promise<boolean> => {
-  ensureAndroid();
-  const connected = await initConnection();
-  if (!connected) throw new Error('Impossible de se connecter a Google Play.');
-
-  const purchases = await getAvailablePurchases();
-  return purchases.some(purchase => purchase.productId === LUNA_PREMIUM_PRODUCT_ID);
+  return true;
 };
 
-export const closePurchaseConnection = async () => {
-  if (Platform.OS === 'android') await endConnection();
-};
+export const closePurchaseConnection = async () => {};

@@ -7,17 +7,30 @@ import {
   AlertTriangle,
   Heart,
   Share2,
-  Check
+  Check,
+  Lightbulb,
+  Clock,
+  ShieldCheck,
+  X
 } from 'lucide-react';
 import { articlesData, HEALTH_FREE_CATEGORIES } from '../../constants/articles';
 import { Article } from '../../types/data';
 import { useAuthStore } from '../../store/authStore';
+import { useDataStore } from '../../store/dataStore';
 import { PaywallModal } from '../common/PaywallModal';
+import {
+  getPhase,
+  getTipForToday,
+  getPhaseLabel,
+  DailyTip
+} from '../../constants/tips';
 
 export const TipsView: React.FC = () => {
   const { paid } = useAuthStore();
+  const { cycleSettings } = useDataStore();
   const [selectedTopic, setSelectedTopic] = useState<string>('ALL');
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
+  const [selectedDailyTip, setSelectedDailyTip] = useState<DailyTip | null>(null);
   const [paywallOpen, setPaywallOpen] = useState(false);
   const [savedFavorites, setSavedFavorites] = useState<string[]>(() => {
     try {
@@ -28,6 +41,16 @@ export const TipsView: React.FC = () => {
     }
   });
   const [copiedLink, setCopiedLink] = useState(false);
+
+  // Dynamic Phase calculation for current user
+  const today = new Date();
+  const lastPeriod = cycleSettings?.lastPeriodStart
+    ? new Date(cycleSettings.lastPeriodStart)
+    : new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
+  const cycleLength = cycleSettings?.cycleLength || 28;
+  const currentPhaseKey = getPhase(lastPeriod, cycleLength, today);
+  const dailyTip = getTipForToday(currentPhaseKey, today);
+  const phaseLabel = getPhaseLabel(currentPhaseKey);
 
   // LUNA V1.1 Categories Filter Chips
   const filterChips: { id: string; label: string; isBonus?: boolean }[] = [
@@ -210,26 +233,72 @@ export const TipsView: React.FC = () => {
         </div>
       </div>
 
-      {/* Category Chips (ALL, TOILETTE, ODEURS, RASAGE, DEMANGEAISONS, DOULEURS, RECETTES, THEMES) */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
-        {filterChips.map(chip => (
+      {/* 1. TOP CARD VIOLETTE : "Pour toi aujourd'hui - Phase [phase]" */}
+      <div className="p-5 sm:p-6 rounded-3xl bg-gradient-to-br from-[#6A2C40] via-[#7b324a] to-[#4e1c2c] text-white shadow-md shadow-[#6A2C40]/25 border border-[#8a3e57] space-y-3 relative overflow-hidden">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#FFD166] animate-ping" />
+            <span className="text-xs uppercase font-bold tracking-wider text-white/90 bg-white/15 backdrop-blur-xs px-3 py-1 rounded-full border border-white/20">
+              Pour toi aujourd'hui · {phaseLabel}
+            </span>
+          </div>
+          <span className="text-[11px] text-white/75 font-medium flex items-center gap-1">
+            <Clock size={13} />
+            <span>{dailyTip.duree}</span>
+          </span>
+        </div>
+
+        <div className="pt-1">
+          <span className="text-[11px] font-semibold text-[#FFB3C1] uppercase tracking-wider block mb-1">
+            {dailyTip.categorie}
+          </span>
+          <h2 className="text-lg sm:text-xl font-serif font-bold text-white leading-snug">
+            {dailyTip.titre}
+          </h2>
+          <p className="text-xs sm:text-sm text-white/85 mt-2 line-clamp-2 leading-relaxed">
+            {dailyTip.contenu}
+          </p>
+        </div>
+
+        <div className="pt-2 flex items-center justify-between">
+          <span className="text-[11px] text-white/70 italic">
+            Aliments & réflexes locaux validés
+          </span>
           <button
-            key={chip.id}
-            onClick={() => setSelectedTopic(chip.id)}
-            className={`px-3.5 py-1.5 rounded-2xl text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 ${
-              selectedTopic === chip.id
-                ? 'bg-[#6A2C40] text-[#fdf3f0] shadow-xs'
-                : 'bg-[#fffdfc] text-[#4a2135]/80 hover:text-[#4a2135] border border-[#f6e7e4] hover:bg-[#fdeeeb]'
-            }`}
+            onClick={() => setSelectedDailyTip(dailyTip)}
+            className="px-4 py-2 rounded-2xl bg-white text-[#6A2C40] hover:bg-[#fdeeeb] text-xs font-bold shadow-sm transition-transform active:scale-95 flex items-center gap-1.5"
           >
-            <span>{chip.label}</span>
-            {chip.isBonus && (
-              <span className="text-[10px] bg-amber-100 text-amber-800 px-1.5 py-0.2 rounded-full font-bold">
-                Bonus
-              </span>
-            )}
+            <BookOpen size={14} />
+            <span>Lire le conseil</span>
           </button>
-        ))}
+        </div>
+      </div>
+
+      {/* Category Chips (ALL, TOILETTE, ODEURS, RASAGE, DEMANGEAISONS, DOULEURS, RECETTES, THEMES) */}
+      <div className="space-y-1.5">
+        <div className="text-[11px] uppercase font-bold tracking-wider text-[#4a2135]/60 px-1">
+          Explorer par thématique
+        </div>
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+          {filterChips.map(chip => (
+            <button
+              key={chip.id}
+              onClick={() => setSelectedTopic(chip.id)}
+              className={`px-3.5 py-1.5 rounded-2xl text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 ${
+                selectedTopic === chip.id
+                  ? 'bg-[#6A2C40] text-[#fdf3f0] shadow-xs'
+                  : 'bg-[#fffdfc] text-[#4a2135]/80 hover:text-[#4a2135] border border-[#f6e7e4] hover:bg-[#fdeeeb]'
+              }`}
+            >
+              <span>{chip.label}</span>
+              {chip.isBonus && (
+                <span className="text-[10px] bg-amber-100 text-amber-800 px-1.5 py-0.2 rounded-full font-bold">
+                  Bonus
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Health free badge reminder */}
@@ -311,6 +380,62 @@ export const TipsView: React.FC = () => {
           );
         })}
       </div>
+
+      {/* DAILY TIP MODAL ("Lire" click) */}
+      {selectedDailyTip && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="w-full max-w-lg bg-[#fffdfc] rounded-3xl p-6 border border-[#f6e7e4] shadow-2xl space-y-4 animate-scale-up">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-bold px-3 py-1 rounded-full bg-[#fdeeeb] text-[#6A2C40]">
+                  {selectedDailyTip.categorie}
+                </span>
+                <span className="text-xs text-[#4a2135]/60 flex items-center gap-1">
+                  <Clock size={13} />
+                  <span>{selectedDailyTip.duree}</span>
+                </span>
+              </div>
+              <button
+                onClick={() => setSelectedDailyTip(null)}
+                className="p-1.5 rounded-full text-[#4a2135]/50 hover:text-[#4a2135] hover:bg-[#fdeeeb]"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="space-y-1">
+              <span className="text-xs font-bold text-[#6A2C40] uppercase tracking-wider block">
+                {phaseLabel}
+              </span>
+              <h3 className="font-serif text-xl sm:text-2xl text-[#4a2135]">
+                {selectedDailyTip.titre}
+              </h3>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-[#fffaf8] border border-[#f6e7e4] text-xs sm:text-sm text-[#4a2135]/85 leading-relaxed">
+              {selectedDailyTip.contenu}
+            </div>
+
+            {/* Medical safety check & guidelines compliant */}
+            <div className="p-3.5 rounded-2xl bg-emerald-50/80 border border-emerald-200/70 space-y-1 text-xs text-emerald-900">
+              <div className="flex items-center gap-1.5 font-bold">
+                <ShieldCheck size={16} className="text-emerald-700" />
+                <span>Garanti bienveillant & Conforme Apple Health 2026</span>
+              </div>
+              <p className="text-[11px] text-emerald-800/80 leading-relaxed">
+                Pas de prescription ni de dosage médical. Aliments locaux recommandés (pondu, ndunda, mangue, foufou, poisson).
+              </p>
+            </div>
+
+            <button
+              onClick={() => setSelectedDailyTip(null)}
+              className="w-full py-3 rounded-2xl bg-[#6A2C40] text-white text-xs font-semibold shadow-xs hover:bg-[#7d354c] transition-colors"
+            >
+              Compris, merci !
+            </button>
+          </div>
+        </div>
+      )}
 
       <PaywallModal isOpen={paywallOpen} onClose={() => setPaywallOpen(false)} />
     </div>

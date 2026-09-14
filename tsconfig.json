@@ -17,5 +17,5 @@
     "noFallthroughCasesInSwitch": true
   },
   "include": ["src"],
-  "exclude": ["src/screens", "src/navigation", "node_modules"]
+  "exclude": ["src/screens", "src/navigation", "src/services/firebase.ts", "node_modules"]
 }

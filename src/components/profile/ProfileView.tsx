@@ -21,6 +21,7 @@ import {
 import { useAuthStore } from '../../store/authStore';
 import { useDataStore } from '../../store/dataStore';
 import { PaywallModal } from '../common/PaywallModal';
+import { MobileMoneyModal } from '../common/MobileMoneyModal';
 
 interface ProfileViewProps {
   onRestartOnboarding: () => void;
@@ -32,12 +33,16 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onRestartOnboarding })
   const logout = useAuthStore(state => state.logout);
   const paid = useAuthStore(state => state.paid);
   const setPaid = useAuthStore(state => state.setPaid);
+  const premiumExpiresAt = useAuthStore(state => state.premiumExpiresAt);
+  const premiumCode = useAuthStore(state => state.premiumCode);
+  const getRemainingPremiumDays = useAuthStore(state => state.getRemainingPremiumDays);
 
   const cycleSettings = useDataStore(state => state.cycleSettings);
   const setCycleSettings = useDataStore(state => state.setCycleSettings);
   const journalEntries = useDataStore(state => state.journalEntries);
 
   const [paywallOpen, setPaywallOpen] = useState(false);
+  const [mobileMoneyModalOpen, setMobileMoneyModalOpen] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
   // Editable cycle preferences
@@ -190,36 +195,71 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onRestartOnboarding })
         </div>
       </div>
 
-      {/* Premium Card: "Soutiens Luna - 5$ à vie" (One-time purchase) */}
+      {/* Section Luna Premium : 2.500 FC / mois */}
       {!paid ? (
-        <div className="p-5 sm:p-6 rounded-3xl bg-gradient-to-br from-[#6A2C40] to-[#8d3a54] text-white shadow-md shadow-[#6A2C40]/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="space-y-1">
-            <span className="text-[10px] uppercase font-bold tracking-widest bg-white/20 px-2.5 py-0.5 rounded-full">
-              Paiement unique · 5$ à vie
-            </span>
-            <h3 className="font-serif text-xl font-bold pt-1">
-              Soutiens Luna - Accès Illimité
-            </h3>
-            <p className="text-xs text-white/80 max-w-sm leading-relaxed">
-              Débloque les Thèmes visuels, l’Export PDF, la sauvegarde Cloud et les recettes bonus. La santé reste 100% gratuite.
-            </p>
+        <div className="p-5 sm:p-6 rounded-3xl bg-gradient-to-br from-[#4A1C2A] to-[#6A2C40] text-white shadow-md shadow-[#4A1C2A]/20 flex flex-col space-y-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div className="space-y-1">
+              <span className="text-[10px] uppercase font-bold tracking-widest bg-white/20 px-2.5 py-0.5 rounded-full inline-block">
+                Luna Premium · 2.500 FC / mois (~0,89 $)
+              </span>
+              <h3 className="font-serif text-xl font-bold pt-1">
+                Prédictions IA & Intimité Maximale
+              </h3>
+              <p className="text-xs text-white/85 max-w-md leading-relaxed">
+                Débloque l'IA pour cycles irréguliers, l'historique illimité, le mode icône discrète, l'export PDF médecin et les thèmes exclusifs.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setPaywallOpen(true)}
+              className="shrink-0 px-5 py-3 rounded-2xl bg-white text-[#4A1C2A] hover:bg-[#FFE6EA] text-xs font-bold shadow-sm transition-transform active:scale-95 cursor-pointer"
+            >
+              Découvrir Premium (2.500 FC)
+            </button>
           </div>
-          <button
-            onClick={() => setPaywallOpen(true)}
-            className="shrink-0 px-5 py-3 rounded-2xl bg-white text-[#6A2C40] hover:bg-[#fdeeeb] text-xs font-bold shadow-sm transition-transform active:scale-95"
-          >
-            Débloquer (5$)
-          </button>
+
+          {/* Toggle / Bouton officiel : Je suis Premium - Entrer mon code Mobile Money */}
+          <div className="pt-3 border-t border-white/15 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5">
+            <div className="text-[11px] text-white/80">
+              Déjà payé par M-Pesa, Airtel ou Orange Money ?
+            </div>
+            <button
+              type="button"
+              onClick={() => setMobileMoneyModalOpen(true)}
+              className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/25 text-white text-xs font-semibold flex items-center justify-center gap-2 transition-colors cursor-pointer"
+            >
+              <KeyRound size={14} />
+              <span>Je suis Premium - Entrer mon code Mobile Money</span>
+            </button>
+          </div>
         </div>
       ) : (
-        <div className="p-4 rounded-2xl bg-[#fdeeeb] border border-[#f1d6da] text-[#6A2C40] flex items-center justify-between text-xs font-semibold">
-          <div className="flex items-center gap-2">
-            <Sparkles size={16} />
-            <span>Membre Donatrice Luna · Accès complet activé à vie</span>
+        <div className="p-5 rounded-3xl bg-[#FDE8E9] border border-[#E8A0B0] text-[#4A1C2A] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xs">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="text-emerald-700 bg-emerald-100 px-2.5 py-0.5 rounded-full text-[10px] font-bold">
+                Premium Actif
+              </span>
+              <span className="text-xs font-bold text-[#4A1C2A]">
+                Luna Premium ({getRemainingPremiumDays()} jours restants)
+              </span>
+            </div>
+            <p className="text-xs text-[#4A1C2A]/75">
+              {premiumExpiresAt
+                ? `Actif jusqu'au ${new Date(premiumExpiresAt).toLocaleDateString('fr-FR')}`
+                : 'Abonnement actif 30 jours'}
+              {premiumCode && ` · Code : ${premiumCode}`}
+            </p>
           </div>
-          <span className="text-emerald-700 bg-emerald-100 px-2.5 py-0.5 rounded-full text-[10px] font-bold">
-            Actif
-          </span>
+
+          <button
+            type="button"
+            onClick={() => setMobileMoneyModalOpen(true)}
+            className="shrink-0 px-4 py-2 rounded-xl bg-[#4A1C2A] text-white hover:bg-[#5d2435] text-xs font-bold transition-colors cursor-pointer"
+          >
+            Prolonger (+30 jours)
+          </button>
         </div>
       )}
 
@@ -490,6 +530,10 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onRestartOnboarding })
       )}
 
       <PaywallModal isOpen={paywallOpen} onClose={() => setPaywallOpen(false)} />
+      <MobileMoneyModal
+        isOpen={mobileMoneyModalOpen}
+        onClose={() => setMobileMoneyModalOpen(false)}
+      />
     </div>
   );
 };

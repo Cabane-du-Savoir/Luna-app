@@ -12,7 +12,7 @@ import { LogModal } from './components/common/LogModal';
 import { AppState } from './types/data';
 
 export const App: React.FC = () => {
-  const { user, loadUser } = useAuthStore();
+  const { user, loadUser, activatePremiumWithCode } = useAuthStore();
   const { cycleSettings, setCycleSettings } = useDataStore();
   const [currentTab, setCurrentTab] = useState<AppState['tab']>('cycle');
   const [logModalOpen, setLogModalOpen] = useState(false);
@@ -22,6 +22,23 @@ export const App: React.FC = () => {
   useEffect(() => {
     const init = async () => {
       await loadUser();
+
+      // Check if returning from pay.html with a code
+      if (typeof window !== 'undefined') {
+        const urlParams = new URLSearchParams(window.location.search);
+        const codeParam = urlParams.get('code');
+        if (codeParam) {
+          activatePremiumWithCode(codeParam);
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
+
+        const handleMessage = (e: MessageEvent) => {
+          if (e.data?.type === 'LUNA_PAYMENT_SUCCESS' && e.data.code) {
+            activatePremiumWithCode(e.data.code);
+          }
+        };
+        window.addEventListener('message', handleMessage);
+      }
 
       const hasStoredUser = !!localStorage.getItem('@luna_user');
       const hasCompletedOnboarding = localStorage.getItem('@luna_onboarding_completed') === 'true';
@@ -56,11 +73,25 @@ export const App: React.FC = () => {
 
   if (!initialized) {
     return (
-      <div className="min-h-screen bg-[#fffaf8] flex flex-col items-center justify-center p-4">
-        <div className="w-16 h-16 rounded-3xl bg-[#6A2C40] text-[#fdf3f0] flex items-center justify-center font-serif text-3xl animate-pulse">
-          ☾
+      <div className="min-h-screen bg-[#FFF8F9] flex flex-col items-center justify-center p-4">
+        {/* Splash screen officiel : Goutte #4A1C2A seule au centre sur fond #FFF8F9 */}
+        <div className="flex flex-col items-center justify-center space-y-4 animate-fade-in">
+          <svg
+            viewBox="420 560 170 260"
+            width="72"
+            height="110"
+            className="shrink-0 select-none animate-pulse"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M 504 578 C 504 578 574 660 574 728 C 574 767 543 798 504 798 C 465 798 434 767 434 728 C 434 660 504 578 504 578 Z"
+              fill="#4A1C2A"
+            />
+          </svg>
+          <p className="font-serif text-base text-[#4A1C2A] tracking-wider">
+            Luna
+          </p>
         </div>
-        <p className="font-serif text-lg text-[#4a2135] mt-4">Luna V1.1 se prépare...</p>
       </div>
     );
   }

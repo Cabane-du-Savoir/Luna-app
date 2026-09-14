@@ -8,6 +8,7 @@ import {
   Plus
 } from 'lucide-react';
 import { AppState } from '../../types/data';
+import { LunaLogo } from '../common/LunaLogo';
 
 interface NavbarProps {
   currentTab: AppState['tab'];
@@ -36,9 +37,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onTabChange, onOpenL
             onClick={() => onTabChange('cycle')}
             className="flex items-center gap-2.5 cursor-pointer select-none"
           >
-            <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-[#6A2C40] to-[#a8506b] text-[#fdf3f0] flex items-center justify-center font-serif text-lg font-bold shadow-xs">
-              ☾
-            </div>
+            <LunaLogo size={36} shape="circle" />
             <div>
               <span className="text-xl font-serif font-bold text-[#4a2135] tracking-tight">
                 Luna
