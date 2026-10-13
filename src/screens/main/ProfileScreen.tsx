@@ -26,7 +26,7 @@ const ProfileScreen: React.FC = () => {
     autoBackup: true,
   });
   const [reminderHour, setReminderHour] = useState(9);
-  const [purchaseLabel, setPurchaseLabel] = useState('Obtenir l’accès à vie');
+  const [purchaseLabel, setPurchaseLabel] = useState('S’abonner via SasPay · 2.500 FC');
   const [isPurchasing, setIsPurchasing] = useState(false);
 
   const user = {
@@ -54,9 +54,9 @@ const ProfileScreen: React.FC = () => {
     const loadPremiumProduct = async () => {
       try {
         const product = await getPremiumProduct();
-        if (product) setPurchaseLabel(`Obtenir l’accès à vie · ${product.localizedPrice}`);
+        if (product) setPurchaseLabel(`S’abonner via SasPay · ${product.localizedPrice}`);
       } catch {
-        // Google Play is unavailable in web preview and before the product is published for testing.
+        // SasPay service
       }
     };
     void loadPremiumProduct();
@@ -146,18 +146,18 @@ const ProfileScreen: React.FC = () => {
             <>
               <Text style={styles.accessLabel}>ESSAI GRATUIT</Text>
               <Text style={styles.accessTitle}>Encore {trialDays} jours</Text>
-              <Text style={styles.accessSubtitle}>Ensuite 5 $ une seule fois, à vie</Text>
+              <Text style={styles.accessSubtitle}>2.500 FC / mois · Sécurisé par SasPay</Text>
               <TouchableOpacity style={[styles.payButton, isPurchasing && styles.payButtonDisabled]} onPress={handlePurchase} disabled={isPurchasing}>
-                <Text style={styles.payButtonText}>{isPurchasing ? 'Connexion à Google Play...' : purchaseLabel}</Text>
+                <Text style={styles.payButtonText}>{isPurchasing ? 'Connexion sécurisée à SasPay...' : purchaseLabel}</Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={handleRestorePurchase} disabled={isPurchasing}>
-                <Text style={styles.restorePurchaseText}>Restaurer un achat</Text>
+                <Text style={styles.restorePurchaseText}>Restaurer un abonnement</Text>
               </TouchableOpacity>
             </>
           ) : (
             <>
-              <Text style={styles.accessLabel}>ACCÈS À VIE</Text>
-              <Text style={styles.accessTitle}>Tout est débloqué</Text>
+              <Text style={styles.accessLabel}>ABONNEMENT PREMIUM ACTIF</Text>
+              <Text style={styles.accessTitle}>Tout est débloqué via SasPay</Text>
             </>
           )}
         </View>

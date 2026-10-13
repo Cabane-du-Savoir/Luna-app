@@ -19,6 +19,7 @@ interface AuthState {
   setPaid: (paid: boolean) => void;
   activatePremiumWithCode: (code: string) => { success: boolean; message: string };
   activateGooglePlaySubscription: () => void;
+  activateSasPaySubscription: (transactionId?: string) => void;
   getRemainingPremiumDays: () => number;
   logout: () => void;
   restoreToken: () => Promise<void>;
@@ -53,14 +54,17 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   activatePremiumWithCode: (inputCode: string) => {
     const raw = (inputCode || '').trim().toUpperCase();
     if (!raw) {
-      return { success: false, message: 'Veuillez entrer votre code Mobile Money.' };
+      return { success: false, message: 'Veuillez entrer votre code SasPay / Mobile Money.' };
     }
 
-    // Accept LUNA-XXXXX or raw XXXXX (alphanumeric, at least 4 chars)
-    const normalized = raw.startsWith('LUNA-') ? raw : `LUNA-${raw}`;
-    const codeBody = normalized.replace('LUNA-', '');
-    if (codeBody.length < 4) {
-      return { success: false, message: 'Code invalide. Le format attendu est LUNA-XXXXX.' };
+    // Accept SASPAY-XXXXX, LUNA-XXXXX or raw XXXXX (alphanumeric, at least 4 chars)
+    let normalized = raw;
+    if (!raw.startsWith('SASPAY-') && !raw.startsWith('LUNA-')) {
+      normalized = `SASPAY-${raw}`;
+    }
+    const codeBody = normalized.replace(/^SASPAY-|^LUNA-/, '');
+    if (codeBody.length < 3) {
+      return { success: false, message: 'Code invalide. Le format attendu est SASPAY-XXXXX ou LUNA-XXXXX.' };
     }
 
     // Calculate 30 days from now (or add 30 days to existing active date)
@@ -81,8 +85,22 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
     return {
       success: true,
-      message: `Félicitations ! Luna Premium est activé pour 30 jours (jusqu'au ${newExpiry.toLocaleDateString('fr-FR')}).`,
+      message: `Félicitations ! Abonnement activé avec succès via SasPay pour 30 jours (jusqu'au ${newExpiry.toLocaleDateString('fr-FR')}).`,
     };
+  },
+
+  activateSasPaySubscription: (transactionId?: string) => {
+    const code = transactionId ? (transactionId.startsWith('SASPAY-') ? transactionId : `SASPAY-${transactionId}`) : `SASPAY-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
+    const newExpiry = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+    const expiryIso = newExpiry.toISOString();
+    set({
+      paid: true,
+      premiumExpiresAt: expiryIso,
+      premiumCode: code,
+    });
+    void AsyncStorage.setItem('@luna_paid', 'true');
+    void AsyncStorage.setItem('@luna_premium_expires', expiryIso);
+    void AsyncStorage.setItem('@luna_premium_code', code);
   },
 
   activateGooglePlaySubscription: () => {

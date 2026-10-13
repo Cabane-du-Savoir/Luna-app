@@ -23,17 +23,25 @@ export const App: React.FC = () => {
     const init = async () => {
       await loadUser();
 
-      // Check if returning from pay.html with a code
+      // Check if returning from SasPay checkout with a code or success flag
       if (typeof window !== 'undefined') {
         const urlParams = new URLSearchParams(window.location.search);
-        const codeParam = urlParams.get('code');
+        const codeParam = urlParams.get('code') || urlParams.get('transaction_id') || urlParams.get('ref');
+        const saspaySuccess = urlParams.get('saspay') === 'success' || urlParams.get('status') === 'success';
+
         if (codeParam) {
           activatePremiumWithCode(codeParam);
+          window.history.replaceState({}, document.title, window.location.pathname);
+        } else if (saspaySuccess) {
+          activatePremiumWithCode('SASPAY-SUCCESS');
           window.history.replaceState({}, document.title, window.location.pathname);
         }
 
         const handleMessage = (e: MessageEvent) => {
-          if (e.data?.type === 'LUNA_PAYMENT_SUCCESS' && e.data.code) {
+          if (
+            (e.data?.type === 'SASPAY_PAYMENT_SUCCESS' || e.data?.type === 'LUNA_PAYMENT_SUCCESS') &&
+            e.data.code
+          ) {
             activatePremiumWithCode(e.data.code);
           }
         };

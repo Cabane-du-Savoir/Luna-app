@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Visuels Google Play Store - Luna</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #FFF5F7;
+      color: #333;
+      padding: 30px 20px;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .container {
+      max-width: 960px;
+      width: 100%;
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 32px;
+      box-shadow: 0 4px 20px rgba(224, 87, 118, 0.12);
+    }
+    h1 {
+      color: #E05776;
+      margin-top: 0;
+      font-size: 28px;
+    }
+    h2 {
+      color: #33101E;
+      font-size: 22px;
+      border-bottom: 2px solid #FFE0E6;
+      padding-bottom: 8px;
+      margin-top: 36px;
+    }
+    p {
+      color: #666;
+      line-height: 1.5;
+    }
+    .card {
+      border: 1px solid #FFE0E6;
+      border-radius: 12px;
+      padding: 20px;
+      margin: 20px 0;
+      background: #FFF9FA;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+    .card img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      margin: 15px 0;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin: 20px 0;
+    }
+    .screen-card {
+      border: 1px solid #FFE0E6;
+      border-radius: 12px;
+      padding: 16px;
+      background: #FFF9FA;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+    .screen-card img {
+      width: 100%;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      margin: 10px 0;
+    }
+    .btn {
+      display: inline-block;
+      background: #E05776;
+      color: white;
+      text-decoration: none;
+      padding: 12px 20px;
+      font-weight: bold;
+      border-radius: 8px;
+      transition: background 0.2s;
+      font-size: 14px;
+    }
+    .btn:hover {
+      background: #C43B5B;
+    }
+    .badge {
+      display: inline-block;
+      background: #FFE3E8;
+      color: #C43B5B;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>Visuels Google Play Store pour Luna</h1>
+  <p>Tous les visuels au format exact exigé par Google Play (PNG, dimensions conformes, haute résolution).</p>
+
+  <h2>1. Icône et Bannière</h2>
+  <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 20px;">
+    <!-- ICONE 512x512 -->
+    <div class="card">
+      <span class="badge">512 x 512 px (PNG)</span>
+      <h3 style="margin: 0;">Icône</h3>
+      <img src="/icon-512.png" alt="Icône Luna 512x512" style="width: 120px; height: 120px;">
+      <a href="/icon-512.png" download="luna_icon_512.png" class="btn">
+        ⬇️ Télécharger (512x512)
+      </a>
+    </div>
+
+    <!-- BANNIERE 1024x500 -->
+    <div class="card">
+      <span class="badge">1024 x 500 px (PNG)</span>
+      <h3 style="margin: 0;">Graphique de promotion</h3>
+      <img src="/feature-graphic.png" alt="Graphique promotionnel Luna 1024x500" style="max-height: 120px;">
+      <a href="/feature-graphic.png" download="luna_feature_graphic_1024x500.png" class="btn">
+        ⬇️ Télécharger (1024x500)
+      </a>
+    </div>
+  </div>
+
+  <h2>2. Captures d'écran pour téléphone (1080 x 1920 px - Format 9:16)</h2>
+  <p>Google demande entre 2 et 8 captures d'écran. Téléchargez ces 4 visuels et importez-les dans le champ <strong>« Captures d'écran pour téléphone »</strong> :</p>
+
+  <div class="grid">
+    <div class="screen-card">
+      <span class="badge">Capture 1 / 4</span>
+      <strong style="font-size: 14px; color: #33101E;">Suivi de cycle</strong>
+      <img src="/screenshot-1.png" alt="Capture 1 - Prédictions">
+      <a href="/screenshot-1.png" download="capture-1-cycle.png" class="btn">
+        ⬇️ Télécharger 1
+      </a>
+    </div>
+
+    <div class="screen-card">
+      <span class="badge">Capture 2 / 4</span>
+      <strong style="font-size: 14px; color: #33101E;">Calendrier & Fertilité</strong>
+      <img src="/screenshot-2.png" alt="Capture 2 - Calendrier">
+      <a href="/screenshot-2.png" download="capture-2-calendrier.png" class="btn">
+        ⬇️ Télécharger 2
+      </a>
+    </div>
+
+    <div class="screen-card">
+      <span class="badge">Capture 3 / 4</span>
+      <strong style="font-size: 14px; color: #33101E;">Journal de santé</strong>
+      <img src="/screenshot-3.png" alt="Capture 3 - Symptômes">
+      <a href="/screenshot-3.png" download="capture-3-symptomes.png" class="btn">
+        ⬇️ Télécharger 3
+      </a>
+    </div>
+
+    <div class="screen-card">
+      <span class="badge">Capture 4 / 4</span>
+      <strong style="font-size: 14px; color: #33101E;">100% Hors-ligne & Privé</strong>
+      <img src="/screenshot-4.png" alt="Capture 4 - Confidentialité">
+      <a href="/screenshot-4.png" download="capture-4-securite.png" class="btn">
+        ⬇️ Télécharger 4
+      </a>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

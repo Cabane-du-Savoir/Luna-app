@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { X, KeyRound, Check, ExternalLink, Sparkles, AlertCircle } from 'lucide-react';
+import { X, KeyRound, Check, ExternalLink, AlertCircle } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { useAuthStore } from '../../store/authStore';
+import { buildSasPayCheckoutUrl } from '../../services/saspay';
 
 interface MobileMoneyModalProps {
   isOpen: boolean;
@@ -31,7 +32,7 @@ export const MobileMoneyModal: React.FC<MobileMoneyModalProps> = ({
           particleCount: 50,
           spread: 60,
           origin: { y: 0.7 },
-          colors: ['#4A1C2A', '#E8A0B0', '#FFE6EA'],
+          colors: ['#4A1C2A', '#E8A0B0', '#00C853'],
         });
       } catch (e) {}
       setTimeout(() => {
@@ -45,10 +46,13 @@ export const MobileMoneyModal: React.FC<MobileMoneyModalProps> = ({
   };
 
   const handleOpenPayPage = () => {
-    const uid = user?.prenom ? `${user.prenom}-${Date.now().toString(36).slice(-4)}` : 'luna-user';
-    const payUrl = `/pay.html?uid=${encodeURIComponent(uid)}`;
-    window.open(payUrl, '_blank');
-    if (onOpenPaymentWeb) onOpenPaymentWeb();
+    if (onOpenPaymentWeb) {
+      onOpenPaymentWeb();
+    } else {
+      const uid = user?.prenom ? `${user.prenom}-${Date.now().toString(36).slice(-4)}` : 'luna-user';
+      const payUrl = buildSasPayCheckoutUrl({ userId: uid });
+      window.open(payUrl, '_blank');
+    }
   };
 
   return (
@@ -68,27 +72,27 @@ export const MobileMoneyModal: React.FC<MobileMoneyModalProps> = ({
           </div>
 
           <span className="text-[11px] uppercase font-bold tracking-widest text-[#4A1C2A] bg-[#FDE8E9] px-3 py-1 rounded-full">
-            RDC · Mobile Money
+            SasPay · Activation
           </span>
 
           <h3 className="text-2xl font-serif font-bold text-[#4A1C2A] mt-2 mb-1">
-            Entre ton code Mobile Money
+            Entre ton code SasPay
           </h3>
           <p className="text-xs text-[#4A1C2A]/70 max-w-xs mx-auto">
-            Code reçu après ton paiement CinetPay de 2.500 FC (ex: <b>LUNA-8K2P9</b>). Débloque 30 jours complets.
+            Code reçu après ton paiement SasPay de 2.500 FC (ex: <b>SASPAY-8K2P9</b>). Débloque 30 jours complets.
           </p>
         </div>
 
         <form onSubmit={handleVerify} className="space-y-4 pt-1">
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-[#4A1C2A]/70 mb-1.5">
-              Code d'activation (LUNA-XXXXX)
+              Code d'activation (SASPAY-XXXXX)
             </label>
             <input
               type="text"
               value={code}
               onChange={e => setCode(e.target.value.toUpperCase())}
-              placeholder="ex: LUNA-8K2P9"
+              placeholder="ex: SASPAY-8K2P9"
               className="w-full p-4 rounded-2xl bg-white border-2 border-[#E8A0B0] text-base font-mono font-bold text-center tracking-widest text-[#4A1C2A] focus:outline-none focus:border-[#4A1C2A] placeholder:text-[#4A1C2A]/30"
               autoFocus
             />
@@ -115,7 +119,7 @@ export const MobileMoneyModal: React.FC<MobileMoneyModalProps> = ({
             type="submit"
             className="w-full py-4 px-6 rounded-2xl bg-[#4A1C2A] hover:bg-[#5d2435] text-white font-bold text-base shadow-md shadow-[#4A1C2A]/20 transition-all active:scale-[0.98] cursor-pointer"
           >
-            Valider mon code (30 jours)
+            Valider mon code SasPay (30 jours)
           </button>
         </form>
 
@@ -126,7 +130,7 @@ export const MobileMoneyModal: React.FC<MobileMoneyModalProps> = ({
             onClick={handleOpenPayPage}
             className="inline-flex items-center gap-1.5 text-xs font-bold text-[#4A1C2A] hover:underline cursor-pointer"
           >
-            <span>Payer 2.500 FC sur luna.app/pay (M-Pesa / Airtel / Orange)</span>
+            <span>Payer 2.500 FC via SasPay (M-Pesa / Airtel / Orange / Visa)</span>
             <ExternalLink size={13} />
           </button>
         </div>

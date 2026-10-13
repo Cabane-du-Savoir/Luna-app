@@ -201,7 +201,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onRestartOnboarding })
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div className="space-y-1">
               <span className="text-[10px] uppercase font-bold tracking-widest bg-white/20 px-2.5 py-0.5 rounded-full inline-block">
-                Luna Premium · 2.500 FC / mois (~0,89 $)
+                Luna Premium · 2.500 FC / mois · Via SasPay
               </span>
               <h3 className="font-serif text-xl font-bold pt-1">
                 Prédictions IA & Intimité Maximale
@@ -215,14 +215,14 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onRestartOnboarding })
               onClick={() => setPaywallOpen(true)}
               className="shrink-0 px-5 py-3 rounded-2xl bg-white text-[#4A1C2A] hover:bg-[#FFE6EA] text-xs font-bold shadow-sm transition-transform active:scale-95 cursor-pointer"
             >
-              Découvrir Premium (2.500 FC)
+              S'abonner avec SasPay (2.500 FC)
             </button>
           </div>
 
-          {/* Toggle / Bouton officiel : Je suis Premium - Entrer mon code Mobile Money */}
+          {/* Toggle / Bouton officiel : Je suis Premium - Entrer mon code SasPay */}
           <div className="pt-3 border-t border-white/15 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5">
             <div className="text-[11px] text-white/80">
-              Déjà payé par M-Pesa, Airtel ou Orange Money ?
+              Déjà payé via SasPay (M-Pesa, Airtel, Orange, Visa) ?
             </div>
             <button
               type="button"
@@ -230,7 +230,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onRestartOnboarding })
               className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/25 text-white text-xs font-semibold flex items-center justify-center gap-2 transition-colors cursor-pointer"
             >
               <KeyRound size={14} />
-              <span>Je suis Premium - Entrer mon code Mobile Money</span>
+              <span>Entrer mon code SasPay</span>
             </button>
           </div>
         </div>
@@ -255,10 +255,10 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onRestartOnboarding })
 
           <button
             type="button"
-            onClick={() => setMobileMoneyModalOpen(true)}
+            onClick={() => setPaywallOpen(true)}
             className="shrink-0 px-4 py-2 rounded-xl bg-[#4A1C2A] text-white hover:bg-[#5d2435] text-xs font-bold transition-colors cursor-pointer"
           >
-            Prolonger (+30 jours)
+            Prolonger avec SasPay (+30 jours)
           </button>
         </div>
       )}
